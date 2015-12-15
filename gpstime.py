@@ -173,7 +173,12 @@ class gpstime(datetime.datetime):
 
     def timestamp(self):
         """Return UNIX time (seconds since epoch)."""
-        return (self - datetime.datetime.fromtimestamp(0, self.tzinfo)).total_seconds()
+        delta = self - datetime.datetime.fromtimestamp(0, self.tzinfo)
+        try:
+            return delta.total_seconds()
+        except AttributeError:
+            # FIXME: this is for python2.6 compatibility
+            return (delta.days * 24 * 3600) + delta.seconds + (delta.microseconds * 1e-6)
 
     def gps(self):
         """Return GPS time as a float."""
