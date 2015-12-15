@@ -33,7 +33,7 @@ class TestGPStime(unittest.TestCase):
 
     def test_gpstime_from_datetime(self):
         dt = datetime.datetime(2015, 12, 8, 4, 54, 19, 0, tzutc())
-        self.assertEqual(gpstime.gpstime.from_datetime(dt).gps(),
+        self.assertEqual(gpstime.gpstime.fromdatetime(dt).gps(),
                          1133585676.0)
 
     def test_gpstime_parse_utc(self):
@@ -49,7 +49,7 @@ class TestGPStime(unittest.TestCase):
                          '2015-12-08T04:54:19.000000Z')
 
     def test_gpstime_from_gps(self):
-        self.assertEqual(gpstime.gpstime.from_gps(1133585676).iso(),
+        self.assertEqual(gpstime.gpstime.fromgps(1133585676).iso(),
                          '2015-12-08T04:54:19.000000Z')
 
     @unittest.expectedFailure

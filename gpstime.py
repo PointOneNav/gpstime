@@ -118,7 +118,7 @@ class gpstime(datetime.datetime):
     a two methods for converting from/to GPS times:
 
     >>> from gpstime import gpstime
-    >>> gt = gpstime.from_gps(1088442990)
+    >>> gt = gpstime.fromgps(1088442990)
     >>> gt.gps()
     1088442990.0
     >>> gt.strftime('%Y-%m-%d %H:%M:%S')
@@ -137,7 +137,7 @@ class gpstime(datetime.datetime):
         return datetime.datetime.__new__(cls, *args)
 
     @classmethod
-    def from_datetime(cls, datetime):
+    def fromdatetime(cls, datetime):
         """Return gpstime object from datetime object"""
         tzinfo = datetime.tzinfo
         if tzinfo is None:
@@ -148,7 +148,7 @@ class gpstime(datetime.datetime):
         return cls
 
     @classmethod
-    def from_gps(cls, gps):
+    def fromgps(cls, gps):
         """Return gpstime object corresponding to GPS time."""
         gt = cls.utcfromtimestamp(gps2unix(gps))
         return gt.replace(tzinfo=tzutc())
@@ -162,13 +162,13 @@ class gpstime(datetime.datetime):
         except ValueError:
             gps = None
         if gps:
-            gt = cls.from_gps(gps)
+            gt = cls.fromgps(gps)
         else:
             if string == 'now':
                 dt = datetime.datetime.now()
             else:
                 dt = dateutil.parser.parse(string)
-            gt = cls.from_datetime(dt)
+            gt = cls.fromdatetime(dt)
         return gt
 
     def timestamp(self):
