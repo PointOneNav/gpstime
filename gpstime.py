@@ -20,9 +20,9 @@ ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 # UNIX time for GPS 0 (1980-01-06T00:00:00Z)
 GPS0 = 315964800
-USER_LEAPDATA = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
-SYS_LEAPDATA = '/var/cache/gpstime/leap-seconds.list'
-IETF_LEAPDATA = 'https://www.ietf.org/timezones/data/leap-seconds.list'
+LEAPFILE_IETF = 'https://www.ietf.org/timezones/data/leap-seconds.list'
+LEAPFILE_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
+LEAPFILE_SYS = '/var/cache/gpstime/leap-seconds.list'
 
 def __ietf_c_to_unix(c):
     '''Convert time since century to time since UNIX epoch
@@ -36,45 +36,16 @@ def __ietf_update_file(path):
 
     '''
     print('updating leap second data from IETF...', file=sys.stderr)
-    urllib.urlretrieve(IETF_LEAPDATA, path+'.tmp')
+    urllib.urlretrieve(LEAPFILE_IETF, path+'.tmp')
     os.rename(path+'.tmp', path)
 
-def __ietf_get_uptodate():
-    '''Get up-to-date IETF leap second data
-
-    Looks in user and system cache locations for IETF
-    leap-seconds.list, then updates the user cache if no files could
-    be found or were all expired.
-
-    '''
-    # first look in user and system locations
-    for path in [USER_LEAPDATA, SYS_LEAPDATA]:
-        if os.path.isfile(path):
-            data, expire = __ietf_parse_leapdata(path)
-            if expire >= time.time():
-                #print(path, file=sys.stderr)
-                return data
-    # all files either don't exist or are expired, so update user data
-    # from IETF
-    try:
-        dd = os.path.dirname(USER_LEAPDATA)
-        if not os.path.exists(dd):
-            os.makedirs(dd)
-        __ietf_update_file(USER_LEAPDATA)
-    except:
-        pass
-    data, expire = __ietf_parse_leapdata(USER_LEAPDATA)
-    if expire < time.time():
-        print('WARNING: leap second data is expired, and could not be updated from the IETF', file=sys.stderr)
-    return data
-
-def __ietf_parse_leapdata(leapdata):
+def __ietf_parse_leapfile(leapfile):
     '''Parse leap second data from IETF leap-seconds.list file
 
     https://www.ietf.org/timezones/data/leap-seconds.list
     '''
     data = []
-    with open(leapdata) as f:
+    with open(leapfile) as f:
         for line in f:
             if line[:2] == '#@':
                 expire = __ietf_c_to_unix(line.split()[1])
@@ -88,6 +59,35 @@ def __ietf_parse_leapdata(leapdata):
                 if unix > GPS0:
                     data.append((unix, offset))
     return data, expire
+
+def __ietf_get_uptodate():
+    '''Get up-to-date IETF leap second data
+
+    Looks in user and system cache locations for IETF
+    leap-seconds.list, then updates the user cache if no files could
+    be found or were all expired.
+
+    '''
+    # first look in user and system locations
+    for path in [LEAPFILE_USER, LEAPFILE_SYS]:
+        if os.path.isfile(path):
+            data, expire = __ietf_parse_leapfile(path)
+            if expire >= time.time():
+                #print(path, file=sys.stderr)
+                return data
+    # all files either don't exist or are expired, so update user data
+    # from IETF
+    try:
+        dd = os.path.dirname(LEAPFILE_USER)
+        if not os.path.exists(dd):
+            os.makedirs(dd)
+        __ietf_update_file(LEAPFILE_USER)
+    except:
+        pass
+    data, expire = __ietf_parse_leapfile(LEAPFILE_USER)
+    if expire < time.time():
+        print('WARNING: leap second data is expired, and could not be updated from the IETF', file=sys.stderr)
+    return data
 
 LEAPDATA = __ietf_get_uptodate()
 
