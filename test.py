@@ -13,6 +13,7 @@ class TestGPStime(unittest.TestCase):
     def test_conversion(self):
         self.assertEqual(gpstime.gps2unix(1133585676), 1449550459)
         self.assertEqual(gpstime.unix2gps(1449550459), 1133585676)
+        self.assertEqual(1133585676, gpstime.unix2gps(gpstime.gps2unix(1133585676)))
 
     def test_conversion_past(self):
         self.assertEqual(gpstime.gps2unix(123456789), 439421586)
@@ -31,26 +32,51 @@ class TestGPStime(unittest.TestCase):
         self.assertEqual(gpstime.gpstime(2015, 12, 8, 4, 54, 19, 0, tzutc()).gps(),
                          1133585676.0)
 
-    def test_gpstime_from_datetime(self):
+    def test_gpstime_fromdatetime(self):
         dt = datetime.datetime(2015, 12, 8, 4, 54, 19, 0, tzutc())
         self.assertEqual(gpstime.gpstime.fromdatetime(dt).gps(),
                          1133585676.0)
 
+    def test_gpstime_parse_now_roundtrip(self):
+        gt0 = gpstime.gpstime.parse()
+        gt1 = gpstime.gpstime.parse(gt0.gps())
+        self.assertEqual(gt0, gt1)
+
     def test_gpstime_parse_utc(self):
-        self.assertEqual(gpstime.gpstime.parse('Dec 08 2015 04:54:19 UTC').gps(),
-                         1133585676.0)
+        self.assertEqual(gpstime.gpstime.parse('Dec 08 2015 04:54:19.2 UTC').gps(),
+                         1133585676.2)
 
     def test_gpstime_parse_local(self):
-        self.assertEqual(gpstime.gpstime.parse('Dec 08 2015 04:54:19 PDT').gps(),
-                         1133614476.0)
+        self.assertEqual(gpstime.gpstime.parse('Dec 08 2015 04:54:19.2 PDT').gps(),
+                         1133614476.2)
 
     def test_gpstime_parse_gps(self):
-        self.assertEqual(gpstime.gpstime.parse(1133585676).iso(),
-                         '2015-12-08T04:54:19.000000Z')
+        self.assertEqual(gpstime.gpstime.parse(1133585676.2).iso(),
+                         '2015-12-08T04:54:19.200000Z')
 
-    def test_gpstime_from_gps(self):
+    def test_gpstime_parse_tconvert(self):
+        self.assertEqual(gpstime.gpstime.tconvert('2015-12-08T04:54:19.200000Z'),
+                         gpstime.gpstime.tconvert(1133585676.2))
+
+    def test_gpstime_fromgps(self):
         self.assertEqual(gpstime.gpstime.fromgps(1133585676).iso(),
                          '2015-12-08T04:54:19.000000Z')
+
+    def test_gpstime_fromgps_timestamp(self):
+        self.assertEqual(gpstime.gpstime.fromgps(1133585676).timestamp(),
+                         1449550459)
+
+    def test_gpstime_tconvert_classmethod(self):
+        self.assertEqual(gpstime.gpstime.tconvert(1133585676.2).gps(),
+                         1133585676.2)
+
+    def test_gpstime_tconvert_iso(self):
+        self.assertEqual(gpstime.tconvert('2015-12-08T04:54:19.200000Z'),
+                         1133585676.2)
+
+    def test_gpstime_tconvert_gps(self):
+        self.assertEqual(gpstime.tconvert(1133585676.2),
+                         '2015-12-08 04:54:19.200000 UTC')
 
     @unittest.expectedFailure
     def test_gpstime_parse_leap(self):
