@@ -9,8 +9,12 @@ import datetime
 import dateutil
 import dateutil.parser
 from dateutil.tz import tzutc, tzlocal
-#import pytz
-import subprocess
+
+import pkg_resources
+try:
+    __version__ = pkg_resources.require('gpstime')[0].version
+except:
+    __version__ = '?.?.?'
 
 ##################################################
 
@@ -203,6 +207,8 @@ Print local, UTC, and GPS time for specified time string.
 '''
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-v', '--version', action='store_true',
+                        help="print version number and exit")
     zg = parser.add_mutually_exclusive_group()
     zg.add_argument('-l', '--local', action='store_const', dest='tz', const='local',
                     help="show only local time")
@@ -219,6 +225,10 @@ Print local, UTC, and GPS time for specified time string.
     parser.add_argument('time', nargs=argparse.REMAINDER,
                         help="time string, in any format (if none specified, output time NOW)")
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit()
 
     def tzname(tz):
         return datetime.datetime.now(tz).tzname()
