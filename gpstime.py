@@ -171,7 +171,8 @@ class gpstime(datetime.datetime):
             gps = float(string)
         except ValueError:
             if string == 'now':
-                dt = datetime.datetime.now()
+                dt = datetime.datetime.utcnow()
+                dt = dt.replace(tzinfo=tzutc())
             else:
                 dt = dateutil.parser.parse(string)
             gt = cls.fromdatetime(dt)
