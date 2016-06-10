@@ -10,7 +10,11 @@ setup(
     author_email = 'jameson.rollins@ligo.org',
     url = 'https://git.ligo.org/jameson.rollins/gpstime',
     license = 'GNU GPL v3+',
-    
+
+    requires = [
+        'dateutil'
+        ],
+
     py_modules = [
         'gpstime',
         ],
