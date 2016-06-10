@@ -203,8 +203,19 @@ Print local, UTC, and GPS time for specified time string.
 '''
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-i', '--iso', action='store_true',
-                        help="output times in ISO format")
+    zg = parser.add_mutually_exclusive_group()
+    zg.add_argument('-l', '--local', action='store_const', dest='tz', const='local',
+                    help="show only local time")
+    zg.add_argument('-u', '--utc', action='store_const', dest='tz', const='utc',
+                    help="show only UTC time (default)")
+    zg.add_argument('-g', '--gps', action='store_const', dest='tz', const='gps',
+                    help="show only GPS time")
+    fg = parser.add_mutually_exclusive_group()
+    fg.set_defaults(format='%Y-%m-%d %H:%M:%S.%f %Z')
+    fg.add_argument('-f', '--format',
+                    help="output time format (see strftime behavior: https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior)")
+    fg.add_argument('-i', '--iso', action='store_const', dest='format', const=ISO_FORMAT,
+                    help="output time in ISO format")
     parser.add_argument('time', nargs=argparse.REMAINDER,
                         help="time string, in any format (if none specified, output time NOW)")
     args = parser.parse_args()
@@ -212,15 +223,19 @@ Print local, UTC, and GPS time for specified time string.
     def tzname(tz):
         return datetime.datetime.now(tz).tzname()
 
-    ltz = tzlocal()
-
     gt = gpstime.parse(' '.join(args.time))
 
-    if args.iso:
-        form = ISO_FORMAT
+    if not args.tz:
+        ltz = tzlocal()
+        utz = tzutc()
+        print('{}: {}'.format(tzname(ltz), gt.astimezone(ltz).strftime(args.format)))
+        print('{}: {}'.format('UTC', gt.astimezone(utz).strftime(args.format)))
+        print('{}: {:.6f}'.format('GPS', gt.gps()))
+    elif args.tz == 'gps':
+        print('{:.6f}'.format(gt.gps()))
     else:
-        form = '%Y-%m-%d %H:%M:%S.%f'
-
-    print('%s: %s'   % (tzname(ltz), gt.astimezone(ltz).strftime(form)))
-    print('%s: %s'   % ('UTC', gt.astimezone(tzutc()).strftime(form)))
-    print('%s: %.6f' % ('GPS', gt.gps()))
+        if args.tz == 'local':
+            tz = tzlocal()
+        elif args.tz == 'utc':
+            tz = tzutc()
+        print('{}'.format(gt.astimezone(tz).strftime(args.format)))
