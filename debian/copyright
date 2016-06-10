@@ -1,0 +1,17 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: gpstime
+Upstream-Contact: Jameson Graef Rollins <jameson.rollins@ligo.org>
+Source: https://git.ligo.org/jameson.rollins/gpstime
+
+Files: *
+Copyright: 2016, Jameson Graef Rollins <jameson.rollins@ligo.org>
+License: GPL-3+
+
+License: GPL-3+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in file "/usr/share/common-licenses/GPL-3".
