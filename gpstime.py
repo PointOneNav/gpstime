@@ -154,21 +154,25 @@ class gpstime(datetime.datetime):
         return gt.replace(tzinfo=tzutc())
 
     @classmethod
-    def parse(cls, string):
-        """Parse an arbitrary time string into a gpstime object."""
+    def parse(cls, string='now'):
+        """Parse an arbitrary time string into a gpstime object.
+
+        If string not specified NOW is assumed.
+
+        """
+        if not string:
+            string = 'now'
         # assume GPS time if string can be converted to a float
         try:
             gps = float(string)
         except ValueError:
-            gps = None
-        if gps:
-            gt = cls.fromgps(gps)
-        else:
             if string == 'now':
                 dt = datetime.datetime.now()
             else:
                 dt = dateutil.parser.parse(string)
             gt = cls.fromdatetime(dt)
+        else:
+            gt = cls.fromgps(gps)
         return gt
 
     def timestamp(self):
@@ -210,11 +214,7 @@ Print local, UTC, and GPS time for specified time string.
 
     ltz = tzlocal()
 
-    if len(args.time) == 0:
-        gt = gpstime.utcnow()
-        gt = gt.replace(tzinfo=tzutc())
-    else:
-        gt = gpstime.parse(' '.join(args.time))
+    gt = gpstime.parse(' '.join(args.time))
 
     if args.iso:
         form = ISO_FORMAT
