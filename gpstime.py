@@ -94,8 +94,9 @@ def __ietf_get_uptodate():
     return data
 
 LEAPDATA = __ietf_get_uptodate()
-
 # FIXME: check expire on execution
+
+##################################################
 
 def unix2gps(unix):
     gps = unix - GPS0
@@ -180,6 +181,8 @@ class gpstime(datetime.datetime):
             gt = cls.fromgps(gps)
         return gt
 
+    tconvert = parse
+
     def timestamp(self):
         """Return UNIX time (seconds since epoch)."""
         delta = self - datetime.datetime.fromtimestamp(0, self.tzinfo)
@@ -196,6 +199,15 @@ class gpstime(datetime.datetime):
     def iso(self):
         """Return time as proper ISO format UTC"""
         return self.strftime(ISO_FORMAT)
+
+
+def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
+    gt = gpstime.parse(string)
+    try:
+        float(string)
+        return gt.strftime(form)
+    except ValueError:
+        return gt.gps()
 
 ##################################################
 ##################################################
