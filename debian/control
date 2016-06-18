@@ -1,14 +1,17 @@
 Source: gpstime
-Section: science
+Section: python
 Priority: optional
 Maintainer: Jameson Graef Rollins <jameson.rollins@ligo.org>
 Build-Depends:
  debhelper (>= 9),
  dh-python,
- python-all (>= 2.6.6-3),
+ python-all,
+ python3-all,
 Standards-Version: 3.9.8
 Homepage: https://git.ligo.org/jameson.rollins/gpstime
 Vcs-Git: https://git.ligo.org/jameson-rollins/gpstime.git
+X-Python-Version: >= 2.6
+X-Python3-Version: >= 3.2
 
 Package: python-gpstime
 Architecture: all
@@ -21,12 +24,24 @@ Description: GPS-aware Python datetime module
  include GPS time conversion methods.  Leapsecond information is
  synchronized from the IETF.
 
+Package: python3-gpstime
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python-dateutil,
+Description: GPS-aware Python3 datetime module
+ Provides a gpstime class that extends the built-in datetime class to
+ include GPS time conversion methods.  Leapsecond information is
+ synchronized from the IETF.
+ .
+ Python3 compatibility.
+
 Package: gpstime
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python:Depends},
  python-gpstime,
 Description: GPS time conversion utility
  Command line utility for converting to/from GPS time.  Uses the
- gpstime python module.
+ gpstime Python module.
