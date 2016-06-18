@@ -18,6 +18,4 @@ setup(
     py_modules = [
         'gpstime',
         ],
-
-    scripts = ['gpstime'],
 )
