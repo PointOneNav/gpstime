@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import urllib
-import datetime
+from datetime import datetime
 import dateutil
 import dateutil.parser
 from dateutil.tz import tzutc, tzlocal
@@ -59,7 +59,7 @@ def __ietf_parse_leapfile(leapfile):
                 sl = line.split()
                 unix = __ietf_c_to_unix(sl[0])
                 offset = int(sl[1])
-                #print('%s -> %s, %s %s %s' % (sl[0], unix, offset, datetime.datetime.fromtimestamp(unix, tzutc()), sl[3:]))
+                #print('%s -> %s, %s %s %s' % (sl[0], unix, offset, datetime.fromtimestamp(unix, tzutc()), sl[3:]))
                 if unix > GPS0:
                     data.append((unix, offset))
     return data, expire
@@ -116,8 +116,8 @@ def gps2unix(gps):
 
 ##################################################
 
-class gpstime(datetime.datetime):
-    """GPS-aware datetime object
+class gpstime(datetime):
+    """GPS-aware datetime class
 
     An extension of the datetime.datetime object, with the addition of
     a two methods for converting from/to GPS times:
@@ -139,14 +139,14 @@ class gpstime(datetime.datetime):
 
     """
     def __new__(cls, *args):
-        return datetime.datetime.__new__(cls, *args)
+        return datetime.__new__(cls, *args)
 
     @classmethod
     def fromdatetime(cls, datetime):
         """Return gpstime object from datetime object"""
         tzinfo = datetime.tzinfo
         if tzinfo is None:
-            tzinfo = dateutil.tz.tzlocal()
+            tzinfo = tzlocal()
         cls = gpstime(datetime.year, datetime.month, datetime.day,
                       datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
                       tzinfo)
@@ -172,7 +172,7 @@ class gpstime(datetime.datetime):
             gps = float(string)
         except ValueError:
             if string == 'now':
-                dt = datetime.datetime.utcnow()
+                dt = datetime.utcnow()
                 dt = dt.replace(tzinfo=tzutc())
             else:
                 dt = dateutil.parser.parse(string)
@@ -244,7 +244,7 @@ Print local, UTC, and GPS time for specified time string.
         sys.exit()
 
     def tzname(tz):
-        return datetime.datetime.now(tz).tzname()
+        return datetime.now(tz).tzname()
 
     gt = gpstime.parse(' '.join(args.time))
 
