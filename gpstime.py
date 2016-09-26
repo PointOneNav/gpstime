@@ -99,6 +99,10 @@ LEAPDATA = __ietf_get_uptodate()
 ##################################################
 
 def unix2gps(unix):
+    """Convert UNIX timestamp to GPS time.
+
+    """
+    unix = float(unix)
     gps = unix - GPS0
     for leap, offset in LEAPDATA:
         if unix < leap:
@@ -107,6 +111,10 @@ def unix2gps(unix):
     return gps
 
 def gps2unix(gps):
+    """Convert GPS time to UNIX timestamp.
+
+    """
+    gps = float(gps)
     unix = gps + GPS0
     for leap, offset in LEAPDATA:
         if unix < leap:
