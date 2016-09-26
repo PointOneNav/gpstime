@@ -1,4 +1,37 @@
 #!/usr/bin/env python
+"""datetime with GPS time support
+
+This module primarily provides functions for converting to/from UNIX
+and GPS times, as well as a `gpstime` class that directly inherits
+from the builtin `datetime` class, adding additional methods for GPS
+time input and output.
+
+LEAPSECONDS: GPS time does not honor leap seconds.  In order to
+translate between GPS and UNIX time all leap seconds since GPS time
+zero need to be accounted for.  In this module, leap seconds are
+determined by querying the IETF leap second bulletin:
+
+  https://www.ietf.org/timezones/data/leap-seconds.list
+
+Upon import, this module loads and parses a local cache of the
+bulletin file, found in one of the following paths:
+
+  ~/.cache/gpstime/leap-seconds.list
+  /var/cache/gpstime/leap-seconds.list
+
+If the found file is out of date the module will attempt to download
+the latest version from the above URL, and store the updated file in
+the user cache location.  System administrators may wish to keep an
+up-to-date version at the system cache location.  The environment
+variable IETF_LEAPFILE may be used to specify a bulletin file directly
+and bypass any potential network access.
+
+KNOWN BUGS: This module does not currently handle conversions of time
+strings describing the actual leap second themselves, which are
+usually represented as the 60th second of the minute during which the
+leap second occurs.
+
+"""
 
 from __future__ import print_function
 import os
@@ -159,23 +192,25 @@ def dt2ts(dt):
 class gpstime(datetime):
     """GPS-aware datetime class
 
-    An extension of the datetime.datetime object, with the addition of
-    a two methods for converting from/to GPS times:
+    An extension of the datetime class, with the addition of methods
+    for converting to/from GPS times:
 
     >>> from gpstime import gpstime
     >>> gt = gpstime.fromgps(1088442990)
     >>> gt.gps()
     1088442990.0
-    >>> gt.strftime('%Y-%m-%d %H:%M:%S')
-    '2014-07-03 17:16:14'
+    >>> gt.strftime('%Y-%m-%d %H:%M:%S %Z')
+    '2014-07-03 17:16:14 UTC'
     >>> gpstime.now().gps()
     1133737481.204008
+
+    In addition a natural language parsing `parse` classmethod returns
+    a gpstime object for a arbitrary time string:
+
     >>> gpstime.parse('2014-07-03 17:16:14 UTC').gps()
     1088442990.0
-
-    This interface uses the IETF leap second bulletin:
-
-    https://www.ietf.org/timezones/data/leap-seconds.list
+    >>> gpstime.parse('2 days ago').gps()
+    1158440653.553765
 
     """
     def __new__(cls, *args):
@@ -237,11 +272,19 @@ class gpstime(datetime):
         return float(unix2gps(self.timestamp()))
 
     def iso(self):
-        """Return time as proper ISO format UTC"""
+        """Return time in standard UTC ISO format"""
         return self.strftime(ISO_FORMAT)
 
 
 def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
+    """Reimplementation of LIGO "tconvert" binary behavior
+
+    Given a GPS time string, return the date/time string with the
+    specified format.  Given a date/time string, return the GPS time.
+
+    This just uses the gpstime.parse() method internally.
+
+    """
     gt = gpstime.parse(string)
     try:
         float(string)
@@ -254,10 +297,10 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
 
 if __name__ == '__main__':
     import argparse
-    description = '''GPS time conversion
+    description = """GPS time conversion
 
-Print local, UTC, and GPS time for specified time string.
-'''
+Print local, UTC, and GPS time for the specified time string.
+"""
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version', action='store_true',
@@ -271,12 +314,12 @@ Print local, UTC, and GPS time for specified time string.
                     help="show only GPS time")
     fg = parser.add_mutually_exclusive_group()
     fg.set_defaults(format='%Y-%m-%d %H:%M:%S.%f %Z')
-    fg.add_argument('-f', '--format',
-                    help="output time format (see strftime behavior: https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior)")
     fg.add_argument('-i', '--iso', action='store_const', dest='format', const=ISO_FORMAT,
                     help="output time in ISO format")
-    parser.add_argument('time', nargs=argparse.REMAINDER,
-                        help="time string, in any format (if none specified, output time NOW)")
+    fg.add_argument('-f', '--format',
+                    help="output time format (see strftime behavior: https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior)")
+    parser.add_argument('time', metavar='TIME', nargs=argparse.REMAINDER, default='now',
+                        help="time string, in any format (if none specified, output current time)")
     args = parser.parse_args()
 
     if args.version:
