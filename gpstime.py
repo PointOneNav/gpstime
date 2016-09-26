@@ -7,7 +7,7 @@ import time
 import urllib
 from datetime import datetime
 import dateutil
-import dateutil.parser
+import subprocess
 from dateutil.tz import tzutc, tzlocal
 
 import pkg_resources
@@ -116,6 +116,20 @@ def gps2unix(gps):
 
 ##################################################
 
+class GPSTimeException(Exception):
+    pass
+
+def cudate(string='now'):
+    """Parse date/time string to UNIX timestamp with GNU coreutils date
+
+    """
+    cmd = ['date', '+%s.%N', '-d', string]
+    try:
+        ts = subprocess.check_output(cmd, stderr=subprocess.PIPE).strip()
+    except subprocess.CalledProcessError:
+        raise GPSTimeException("could not parse string '{}'".format(string))
+    return float(ts)
+
 class gpstime(datetime):
     """GPS-aware datetime class
 
@@ -162,23 +176,28 @@ class gpstime(datetime):
     def parse(cls, string='now'):
         """Parse an arbitrary time string into a gpstime object.
 
-        If string not specified NOW is assumed.
+        If string not specified 'now' is assumed.  Strings that can be
+        cast to float are assumed to be GPS time.  Prepend '@' to
+        specify a UNIX timestamp.
+
+        This parse uses the natural lanuage parsing abilities of the
+        GNU coreutils 'date' utility.  See "DATE STRING" in date(1)
+        for information on possible date/time descriptions.
 
         """
         if not string:
             string = 'now'
-        # assume GPS time if string can be converted to a float
         try:
             gps = float(string)
         except ValueError:
-            if string == 'now':
-                dt = datetime.utcnow()
-                dt = dt.replace(tzinfo=tzutc())
-            else:
-                dt = dateutil.parser.parse(string)
-            gt = cls.fromdatetime(dt)
-        else:
+            gps = None
+        if gps:
             gt = cls.fromgps(gps)
+        elif string == 'now':
+            gt = cls.now().replace(tzinfo=tzlocal())
+        else:
+            ts = cudate(string)
+            gt = cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
         return gt
 
     tconvert = parse
@@ -246,7 +265,10 @@ Print local, UTC, and GPS time for specified time string.
     def tzname(tz):
         return datetime.now(tz).tzname()
 
-    gt = gpstime.parse(' '.join(args.time))
+    try:
+        gt = gpstime.parse(' '.join(args.time))
+    except GPSTimeException as e:
+        sys.exit("Error: {}".format(e))
 
     if not args.tz:
         ltz = tzlocal()
