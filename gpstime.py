@@ -7,6 +7,7 @@ import time
 import urllib
 from datetime import datetime
 import dateutil
+import warnings
 import subprocess
 from dateutil.tz import tzutc, tzlocal
 
@@ -138,6 +139,23 @@ def cudate(string='now'):
         raise GPSTimeException("could not parse string '{}'".format(string))
     return float(ts)
 
+def dt2ts(dt):
+    """Return UNIX timestamp for datetime object.
+
+    """
+    try:
+        dt = dt.astimezone(tzutc())
+        tzero = datetime.fromtimestamp(0, tzutc())
+    except ValueError:
+        warnings.warn("GPS converstion requires timezone info.  Assuming local time...",
+                      RuntimeWarning)
+        dt = dt.replace(tzinfo=tzlocal())
+        tzero = datetime.fromtimestamp(0, tzlocal())
+    delta = dt - tzero
+    return delta.total_seconds()
+
+##################################################
+
 class gpstime(datetime):
     """GPS-aware datetime class
 
@@ -211,13 +229,8 @@ class gpstime(datetime):
     tconvert = parse
 
     def timestamp(self):
-        """Return UNIX time (seconds since epoch)."""
-        delta = self - datetime.datetime.fromtimestamp(0, self.tzinfo)
-        try:
-            return delta.total_seconds()
-        except AttributeError:
-            # FIXME: this is for python2.6 compatibility
-            return (delta.days * 24 * 3600) + delta.seconds + (delta.microseconds * 1e-6)
+        """Return UNIX timestamp (seconds since epoch)."""
+        return dt2ts(self)
 
     def gps(self):
         """Return GPS time as a float."""
