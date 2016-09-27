@@ -19,12 +19,15 @@ bulletin file, found in one of the following paths:
   ~/.cache/gpstime/leap-seconds.list
   /var/cache/gpstime/leap-seconds.list
 
-If the found file is out of date the module will attempt to download
-the latest version from the above URL, and store the updated file in
-the user cache location.  System administrators may wish to keep an
-up-to-date version at the system cache location.  The environment
-variable IETF_LEAPFILE may be used to specify a bulletin file directly
-and bypass any potential network access.
+If the found file is out of date the module will throw a warning to
+the user.  The data can then be updated by running the
+'update_leapdata()' command.  This will download the latest version
+from the above URL, and store the updated file in the user cache
+location.  System administrators may wish to keep an up-to-date
+version at the system cache location, which can be updated by running
+'update_leapdata("sys")'.  The environment variable IETF_LEAPFILE may
+be used to specify a bulletin file directly and bypass any potential
+network access.
 
 KNOWN BUGS: This module does not currently handle conversions of time
 strings describing the actual leap second themselves, which are
@@ -37,7 +40,7 @@ from __future__ import print_function
 import os
 import sys
 import time
-import urllib
+import requests
 from datetime import datetime
 import dateutil
 import warnings
@@ -62,6 +65,8 @@ LEAPFILE_IETF = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 LEAPFILE_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
 LEAPFILE_SYS = '/var/cache/gpstime/leap-seconds.list'
 
+LEAPDATA, LEAPDATA_EXPIRE = None, None
+
 def __ietf_c_to_unix(c):
     """Convert time since century to time since UNIX epoch
 
@@ -70,15 +75,18 @@ def __ietf_c_to_unix(c):
     """
     return int(c) - 2208988800
 
-def __ietf_update_file(path):
+def __ietf_retrieve(path):
     """Download IETF leap second data to path
 
     """
-    print('updating leap second data from IETF...', file=sys.stderr)
     dd = os.path.dirname(path)
-    if not os.path.exists(dd):
+    if dd != '' and not os.path.exists(dd):
         os.makedirs(dd)
-    urllib.urlretrieve(LEAPFILE_IETF, path+'.tmp')
+    r = requests.get(LEAPFILE_IETF)
+    r.raise_for_status()
+    with open(path+'.tmp', 'wb') as f:
+        for c in r.iter_content():
+            f.write(c)
     os.rename(path+'.tmp', path)
 
 def __ietf_parse_leapfile(leapfile):
@@ -88,6 +96,9 @@ def __ietf_parse_leapfile(leapfile):
 
     """
     data = []
+    expire = 0
+    if not os.path.isfile(leapfile):
+        return data, expire
     with open(leapfile) as f:
         for line in f:
             if line[:2] == '#@':
@@ -103,34 +114,54 @@ def __ietf_parse_leapfile(leapfile):
                     data.append((unix, offset))
     return data, expire
 
-def __ietf_get_uptodate():
-    """Get up-to-date IETF leap second data
+def __load_leapdata(update=False):
+    """Load IETF leap second data from user or system locations
 
-    Looks in user and system cache locations for IETF
-    leap-seconds.list, then updates the user cache if no files could
-    be found or were all expired.
+    If the IETF_LEAPFILE environment variable is specified data will
+    be loaded from that path.  Otherwise data will be loaded from the
+    first of user or system path location that is not expired.
 
     """
-    # first look in user and system locations
+    global LEAPDATA
+    global LEAPDATA_EXPIRE
+    env_leapfile = os.getenv('IETF_LEAPFILE')
+    if env_leapfile:
+        LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(env_leapfile)
+        if LEAPDATA_EXPIRE >= time.time():
+            warnings.warn("leap second data is expired",
+                          RuntimeWarning, stacklevel=1)
+        return
     for path in [LEAPFILE_USER, LEAPFILE_SYS]:
-        if os.path.isfile(path):
-            data, expire = __ietf_parse_leapfile(path)
-            if expire >= time.time():
-                #print(path, file=sys.stderr)
-                return data
-    # all files either don't exist or are expired, so update user data
-    # from IETF
-    try:
-        __ietf_update_file(LEAPFILE_USER)
-    except:
-        pass
-    data, expire = __ietf_parse_leapfile(LEAPFILE_USER)
-    if expire < time.time():
-        print('WARNING: leap second data is expired, and could not be updated from the IETF', file=sys.stderr)
-    return data
+        LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(path)
+        if LEAPDATA_EXPIRE >= time.time():
+            return
+    # if we're here no non-expired leap data has been found
+    if update:
+        update_leapdata()
+        if LEAPDATA_EXPIRE < time.time():
+            warnings.warn("leap second data is expired and could not be updated from IETF",
+                          RuntimeWarning, stacklevel=1)
+    else:
+        warnings.warn("""Leap second data is expired.
+Run 'update_leapdata()' to download the latest bulletin from the IETF""",
+                      RuntimeWarning, stacklevel=1)
 
-LEAPDATA = __ietf_get_uptodate()
-# FIXME: check expire on execution
+def update_leapdata(loc='user'):
+    """Update lead second data and cache file from online IETF bulletin
+
+    By default this updates the user cache location (see
+    LEAPFILE_USER), but the system cache (LEAPFILE_SYS) can attempt to
+    be updated by specifying loc='sys'.
+
+    """
+    global LEAPDATA
+    global LEAPDATA_EXPIRE
+    if LEAPDATA_EXPIRE >= time.time():
+        return
+    leapfile = eval('LEAPFILE_'+loc.upper())
+    print('updating leap second data from IETF...', file=sys.stderr)
+    __ietf_retrieve(leapfile)
+    LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(leapfile)
 
 ##################################################
 
@@ -297,7 +328,18 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
 ##################################################
 ##################################################
 
-if __name__ == '__main__':
+if __name__ != '__main__':
+
+    # if this module is being loaded and not executed, load the leap
+    # data with updates disabled and warnings enabled
+    __load_leapdata(update=False)
+
+else:
+
+    # otherwise, when being executed as a script, load leap data and
+    # update as needed
+    __load_leapdata(update=True)
+
     import argparse
     description = """GPS time conversion
 

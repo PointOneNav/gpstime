@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 import unittest
+import os
 import time
 import datetime
 from dateutil.tz import tzutc, tzlocal
 
+os.environ['IETF_LEAPFILE'] = 'leap-seconds.list'
 import gpstime
 
 ##################################################
