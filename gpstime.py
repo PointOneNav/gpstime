@@ -74,6 +74,9 @@ def __ietf_update_file(path):
 
     '''
     print('updating leap second data from IETF...', file=sys.stderr)
+    dd = os.path.dirname(path)
+    if not os.path.exists(dd):
+        os.makedirs(dd)
     urllib.urlretrieve(LEAPFILE_IETF, path+'.tmp')
     os.rename(path+'.tmp', path)
 
@@ -116,9 +119,6 @@ def __ietf_get_uptodate():
     # all files either don't exist or are expired, so update user data
     # from IETF
     try:
-        dd = os.path.dirname(LEAPFILE_USER)
-        if not os.path.exists(dd):
-            os.makedirs(dd)
         __ietf_update_file(LEAPFILE_USER)
     except:
         pass
