@@ -63,16 +63,17 @@ LEAPFILE_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
 LEAPFILE_SYS = '/var/cache/gpstime/leap-seconds.list'
 
 def __ietf_c_to_unix(c):
-    '''Convert time since century to time since UNIX epoch
+    """Convert time since century to time since UNIX epoch
 
     1900-01-01T00:00:00Z -> 1970-01-01T00:00:00Z
-    '''
+
+    """
     return int(c) - 2208988800
 
 def __ietf_update_file(path):
-    '''Download IETF leap second data to path
+    """Download IETF leap second data to path
 
-    '''
+    """
     print('updating leap second data from IETF...', file=sys.stderr)
     dd = os.path.dirname(path)
     if not os.path.exists(dd):
@@ -81,10 +82,11 @@ def __ietf_update_file(path):
     os.rename(path+'.tmp', path)
 
 def __ietf_parse_leapfile(leapfile):
-    '''Parse leap second data from IETF leap-seconds.list file
+    """Parse leap second data from IETF leap-seconds.list file
 
     https://www.ietf.org/timezones/data/leap-seconds.list
-    '''
+
+    """
     data = []
     with open(leapfile) as f:
         for line in f:
@@ -102,13 +104,13 @@ def __ietf_parse_leapfile(leapfile):
     return data, expire
 
 def __ietf_get_uptodate():
-    '''Get up-to-date IETF leap second data
+    """Get up-to-date IETF leap second data
 
     Looks in user and system cache locations for IETF
     leap-seconds.list, then updates the user cache if no files could
     be found or were all expired.
 
-    '''
+    """
     # first look in user and system locations
     for path in [LEAPFILE_USER, LEAPFILE_SYS]:
         if os.path.isfile(path):
