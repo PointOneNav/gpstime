@@ -61,9 +61,12 @@ ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 # UNIX time for GPS 0 (1980-01-06T00:00:00Z)
 GPS0 = 315964800
+
 LEAPFILE_IETF = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 LEAPFILE_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
 LEAPFILE_SYS = '/var/cache/gpstime/leap-seconds.list'
+LEAPFILE_PAK = os.path.join(os.path.dirname(__file__), 'leap-seconds.list')
+LEAPFILES = [LEAPFILE_USER, LEAPFILE_SYS, LEAPFILE_PAK]
 
 LEAPDATA, LEAPDATA_EXPIRE = None, None
 
@@ -131,7 +134,7 @@ def __load_leapdata(update=False):
             warnings.warn("leap second data is expired",
                           RuntimeWarning, stacklevel=1)
         return
-    for path in [LEAPFILE_USER, LEAPFILE_SYS]:
+    for path in LEAPFILES:
         LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(path)
         if LEAPDATA_EXPIRE >= time.time():
             return
@@ -146,12 +149,12 @@ def __load_leapdata(update=False):
 Run 'update_leapdata()' to download the latest bulletin from the IETF""",
                       RuntimeWarning, stacklevel=1)
 
-def update_leapdata(loc='user'):
+def update_leapdata(loc='USER'):
     """Update lead second data and cache file from online IETF bulletin
 
     By default this updates the user cache location (see
     LEAPFILE_USER), but the system cache (LEAPFILE_SYS) can attempt to
-    be updated by specifying loc='sys'.
+    be updated by specifying loc='SYS'.
 
     """
     global LEAPDATA
@@ -328,14 +331,7 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
 ##################################################
 ##################################################
 
-if __name__ != '__main__':
-
-    # if this module is being loaded and not executed, load the leap
-    # data with updates disabled and warnings enabled
-    __load_leapdata(update=False)
-
-else:
-
+def main():
     # otherwise, when being executed as a script, load leap data and
     # update as needed
     __load_leapdata(update=True)
@@ -392,3 +388,11 @@ Print local, UTC, and GPS time for the specified time string.
         elif args.tz == 'utc':
             tz = tzutc()
         print('{}'.format(gt.astimezone(tz).strftime(args.format)))
+
+##################################################
+
+if __name__ != '__main__':
+
+    # if this module is being loaded and not executed, load the leap
+    # data with updates disabled and warnings enabled
+    __load_leapdata(update=False)
