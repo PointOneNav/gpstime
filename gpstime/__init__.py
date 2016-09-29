@@ -328,6 +328,13 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
     except ValueError:
         return gt.gps()
 
+
+def gpsnow():
+    """Return current GPS time
+
+    """
+    return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
+
 ##################################################
 ##################################################
 
