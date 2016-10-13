@@ -1,5 +1,4 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME = gpstime
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild

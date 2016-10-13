@@ -1,5 +1,5 @@
-gpstime (0.1.0-1) unstable; urgency=low
+gpstime (0.1.2-1) unstable; urgency=low
 
-  * new release
+  * New release
 
- -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Thu, 09 Jun 2016 17:28:32 -0700
+ -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Wed, 12 Oct 2016 17:25:30 -0700
