@@ -9,8 +9,12 @@ Build-Depends:
  debhelper (>= 9),
  dh-python,
  python-all,
+ python-dateutil,
+ python-requests,
  python-setuptools,
  python3-all,
+ python3-dateutil,
+ python3-requests,
  python3-setuptools,
 X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.2

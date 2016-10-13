@@ -1,3 +1,9 @@
+gpstime (0.1.2-2) unstable; urgency=medium
+
+  * Add build dependencies on python-{dateutil,requests} for tests
+
+ -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Thu, 13 Oct 2016 11:05:45 -0700
+
 gpstime (0.1.2-1) unstable; urgency=low
 
   * New release
