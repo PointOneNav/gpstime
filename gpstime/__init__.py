@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """datetime with GPS time support
 
 This module primarily provides functions for converting to/from UNIX
@@ -18,16 +17,19 @@ bulletin file, found in one of the following paths:
 
   ~/.cache/gpstime/leap-seconds.list
   /var/cache/gpstime/leap-seconds.list
+  <package_data_path>/leap-seconds.list
 
-If the found file is out of date the module will throw a warning to
-the user.  The data can then be updated by running the
-'update_leapdata()' command.  This will download the latest version
-from the above URL, and store the updated file in the user cache
-location.  System administrators may wish to keep an up-to-date
-version at the system cache location, which can be updated by running
-'update_leapdata("sys")'.  The environment variable IETF_LEAPFILE may
-be used to specify a bulletin file directly and bypass any potential
-network access.
+If all files are found to be out of date the module will throw a
+warning to the user on import.  The data can be updated after import
+by running the 'update_leapdata()' command.  This will download the
+latest version from the above URL and store the updated file in the
+user cache location.  System administrators wishing to maintain an
+up-to-date version at the system cache location can run the following
+from the command line:
+
+  IETF_LEAPFILE=/var/cache/gpstime/leap-seconds.list \
+  IETF_UPDATE=force \
+  python -m gpstime
 
 KNOWN BUGS: This module does not currently handle conversions of time
 strings describing the actual leap second themselves, which are
@@ -117,54 +119,65 @@ def __ietf_parse_leapfile(leapfile):
                     data.append((unix, offset))
     return data, expire
 
-def __load_leapdata(update=False):
+def is_leapdata_expired():
+    return LEAPDATA_EXPIRE <= time.time()
+
+def __load_leapdata(leapfile=os.getenv('IETF_LEAPFILE')):
     """Load IETF leap second data from user or system locations
 
-    If the IETF_LEAPFILE environment variable is specified data will
-    be loaded from that path.  Otherwise data will be loaded from the
-    first of user or system path location that is not expired.
+    If `leapfile` is specified data will be loaded from that location
+    instead.  Otherwise data will be loaded from the first of user or
+    system path location that is not expired.
+
+    If default behavior of this function can be modified via the
+    IETF_LEAPFILE environment variable.
 
     """
     global LEAPDATA
     global LEAPDATA_EXPIRE
+    leapfiles = LEAPFILES
     env_leapfile = os.getenv('IETF_LEAPFILE')
     if env_leapfile:
-        LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(env_leapfile)
-        if LEAPDATA_EXPIRE >= time.time():
-            warnings.warn("leap second data is expired",
-                          RuntimeWarning, stacklevel=1)
-        return
-    for path in LEAPFILES:
+        leapfiles = [env_leapfile]
+    for path in leapfiles:
         LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(path)
-        if LEAPDATA_EXPIRE >= time.time():
+        if not is_leapdata_expired():
             return
     # if we're here no non-expired leap data has been found
-    if update:
-        update_leapdata()
-        if LEAPDATA_EXPIRE < time.time():
-            warnings.warn("leap second data is expired and could not be updated from IETF",
-                          RuntimeWarning, stacklevel=1)
-    else:
-        warnings.warn("""Leap second data is expired.
-Run 'update_leapdata()' to download the latest bulletin from the IETF""",
-                      RuntimeWarning, stacklevel=1)
+    warnings.warn("Leap second data is expired.  See update_leapdata() to update.",
+                  RuntimeWarning, stacklevel=0)
 
-def update_leapdata(loc='USER'):
-    """Update lead second data and cache file from online IETF bulletin
+#################
+__load_leapdata()
+#################
 
-    By default this updates the user cache location (see
-    LEAPFILE_USER), but the system cache (LEAPFILE_SYS) can attempt to
-    be updated by specifying loc='SYS'.
+def update_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
+                    update=os.getenv('IETF_UPDATE')):
+    """Update user leap data cache file from online IETF bulletin
+
+    If the leap data is expired, leap second data will be downloaded
+    from the IETF and stored in the user data cache location:
+
+       ~/.cache/gpstime/leap-seconds.list
+
+    If a `leapfile` path is supplied that file will be updated
+    instead.  If the `update` option is False or the strings 'FALSE'
+    or 'NO' data will be loaded from the specified file without
+    updating from the IETF.
+
+    The default behavior of this function can be modified via the
+    IETF_LEAPFILE and IETF_UPDATE environment variables.
 
     """
-    global LEAPDATA
-    global LEAPDATA_EXPIRE
-    if LEAPDATA_EXPIRE >= time.time():
-        return
-    leapfile = eval('LEAPFILE_'+loc.upper())
-    print('updating leap second data from IETF...', file=sys.stderr)
-    __ietf_retrieve(leapfile)
-    LEAPDATA, LEAPDATA_EXPIRE = __ietf_parse_leapfile(leapfile)
+    if not leapfile:
+        leapfile = LEAPFILE_USER
+    if update is False or (update and update.upper() in ['FALSE', 'NO']):
+        pass
+    else:
+        __ietf_retrieve(leapfile)
+    __load_leapdata(leapfile)
+    if is_leapdata_expired():
+        raise RuntimeError("IETF leap data is expired or could not be updated.")
 
 ##################################################
 
@@ -334,72 +347,3 @@ def gpsnow():
 
     """
     return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
-
-##################################################
-##################################################
-
-def main():
-    # otherwise, when being executed as a script, load leap data and
-    # update as needed
-    __load_leapdata(update=True)
-
-    import argparse
-    description = """GPS time conversion
-
-Print local, UTC, and GPS time for the specified time string.
-"""
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-v', '--version', action='store_true',
-                        help="print version number and exit")
-    zg = parser.add_mutually_exclusive_group()
-    zg.add_argument('-l', '--local', action='store_const', dest='tz', const='local',
-                    help="show only local time")
-    zg.add_argument('-u', '--utc', action='store_const', dest='tz', const='utc',
-                    help="show only UTC time (default)")
-    zg.add_argument('-g', '--gps', action='store_const', dest='tz', const='gps',
-                    help="show only GPS time")
-    fg = parser.add_mutually_exclusive_group()
-    fg.set_defaults(format='%Y-%m-%d %H:%M:%S.%f %Z')
-    fg.add_argument('-i', '--iso', action='store_const', dest='format', const=ISO_FORMAT,
-                    help="output time in ISO format")
-    fg.add_argument('-f', '--format',
-                    help="output time format (see strftime behavior: https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior)")
-    parser.add_argument('time', metavar='TIME', nargs=argparse.REMAINDER, default='now',
-                        help="time string, in any format (if none specified, output current time)")
-    args = parser.parse_args()
-
-    if args.version:
-        print(__version__)
-        sys.exit()
-
-    def tzname(tz):
-        return datetime.now(tz).tzname()
-
-    try:
-        gt = gpstime.parse(' '.join(args.time))
-    except GPSTimeException as e:
-        sys.exit("Error: {}".format(e))
-
-    if not args.tz:
-        ltz = tzlocal()
-        utz = tzutc()
-        print('{}: {}'.format(tzname(ltz), gt.astimezone(ltz).strftime(args.format)))
-        print('{}: {}'.format('UTC', gt.astimezone(utz).strftime(args.format)))
-        print('{}: {:.6f}'.format('GPS', gt.gps()))
-    elif args.tz == 'gps':
-        print('{:.6f}'.format(gt.gps()))
-    else:
-        if args.tz == 'local':
-            tz = tzlocal()
-        elif args.tz == 'utc':
-            tz = tzutc()
-        print('{}'.format(gt.astimezone(tz).strftime(args.format)))
-
-##################################################
-
-if __name__ != '__main__':
-
-    # if this module is being loaded and not executed, load the leap
-    # data with updates disabled and warnings enabled
-    __load_leapdata(update=False)
