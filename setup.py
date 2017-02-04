@@ -12,10 +12,7 @@ setup(
     license = 'GNU GPL v3+',
 
     packages = ['gpstime'],
-
-    package_data = {
-        'gpstime': ['leap-seconds.list']
-        },
+    py_modules = ['ietf_leap_seconds'],
 
     # install_requires = [
     #     'dateutil'
@@ -27,6 +24,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'gpstime = gpstime.__main__:main',
+            'ietf-leap-seconds = ietf_leap_seconds:main',
             ],
         }
 )

@@ -1,15 +1,12 @@
 from __future__ import print_function
-import os
 import sys
 import argparse
-import warnings
-from datetime import datetime
 from dateutil.tz import tzutc, tzlocal
-
-from . import ISO_FORMAT, is_leapdata_expired, update_leapdata, gpstime, GPSTimeException
+import ietf_leap_seconds
+from . import ISO_FORMAT, gpstime, GPSTimeException
 
 def tzname(tz):
-    return datetime.now(tz).tzname()
+    return gpstime.now(tz).tzname()
 
 def main():
     description = """GPS time conversion
@@ -18,11 +15,6 @@ Print local, UTC, and GPS time for the specified time string.
 """
     epilog = """See the python datetime module for time formating options:
 https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
-
-The IETF_UPDATE environment variable can be used to control leap
-data network updates.  If the value is 'FALSE' or 'NO' then no network
-update will occur.  If the value is 'FORCE' a network update will
-occur regardless of expiration status.
 """
     parser = argparse.ArgumentParser(description=description,
                                      epilog=epilog,
@@ -49,14 +41,6 @@ occur regardless of expiration status.
     if args.version:
         print(__version__)
         sys.exit()
-
-    ietf_update = os.getenv('IETF_UPDATE', '').upper()
-    if is_leapdata_expired() or ietf_update == 'FORCE':
-        print('updating leap second data from IETF...', file=sys.stderr)
-        try:
-            update_leapdata()
-        except RuntimeError as e:
-            print('WARNING: {}'.format(e), file=sys.stderr)
 
     try:
         gt = gpstime.parse(' '.join(args.time))
