@@ -8,6 +8,7 @@ Vcs-Git: https://git.ligo.org/jameson.rollins/gpstime.git
 Build-Depends:
  debhelper (>= 9),
  dh-python,
+ dh-systemd (>=1.5),
  python-all,
  python-dateutil,
  python-requests,
@@ -22,35 +23,74 @@ X-Python3-Version: >= 3.2
 Package: python-gpstime
 Architecture: all
 Depends:
+ python-ietf-leap-seconds,
  python-dateutil,
- python-requests,
  ${misc:Depends},
  ${python:Depends},
 Description: GPS-aware Python datetime module
  Provides a gpstime class that extends the built-in datetime class to
- include GPS time conversion methods.  Leapsecond information is
- synchronized from the IETF.
+ include GPS time conversion methods.
 
 Package: python3-gpstime
 Architecture: all
 Depends:
+ python3-ietf-leap-seconds,
  python3-dateutil,
- python3-requests,
  ${misc:Depends},
  ${python3:Depends},
 Description: GPS-aware Python3 datetime module
  Provides a gpstime class that extends the built-in datetime class to
- include GPS time conversion methods.  Leapsecond information is
- synchronized from the IETF.
+ include GPS time conversion methods.
  .
  Python3 compatibility.
 
 Package: gpstime
 Architecture: all
 Depends:
- python-gpstime,
+ python3-gpstime,
+ ${misc:Depends},
+ ${python3:Depends},
+Description: GPS time conversion utility
+ Command line utility for converting to/from GPS time.
+
+Package: python-ietf-leap-seconds
+Architecture: all
+Depends:
+ python-dateutil,
+ python-requests,
  ${misc:Depends},
  ${python:Depends},
-Description: GPS time conversion utility
- Command line utility for converting to/from GPS time.  Uses the
- gpstime Python module.
+Recommends: ietf-leap-seconds
+Description: Python IETF leap second data interface
+ Interface for the IETF leap second list, which is the official list
+ of leap second times.  The file will be downloaded from the IETF into
+ a local cache if not available from the system (see ietf-leap-seconds
+ package).
+
+Package: python3-ietf-leap-seconds
+Architecture: all
+Depends:
+ python3-dateutil,
+ python3-requests,
+ ${misc:Depends},
+ ${python3:Depends},
+Recommends: ietf-leap-seconds
+Description: Python3 IETF leap second data interface
+ Interface for the IETF leap second list, which is the official list
+ of leap second times.  The file will be downloaded from the IETF into
+ a local cache if not available from the system (see ietf-leap-seconds
+ package).
+ .
+ Python3 compatibility.
+
+Package: ietf-leap-seconds
+Architecture: all
+Pre-Depends: adduser
+Depends:
+ python3-ietf-leap-seconds,
+ ${misc:Depends},
+Description: Maintain system cache of IETF leap second data
+ Systemd service and timer units for maintaining a local system-level
+ cache of the IETF leap second data file.  The IETF updates this file
+ when new leap seconds are announced.  The file maintained by this
+ package will be utilized by the python*-ietf-leap-seconds packages.
