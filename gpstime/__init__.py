@@ -280,7 +280,12 @@ class gpstime(datetime):
     def fromgps(cls, gps):
         """Return gpstime object corresponding to GPS time."""
         gt = cls.utcfromtimestamp(gps2unix(gps))
-        return gt.replace(tzinfo=tzutc())
+        # HACK: in python3, utcfromtimestamp() seems to floor instead
+        # of round the microseconds.  this causes round trips to fail.
+        # manually fix microseconds here to the rounded value instead.
+        ms = int(round((gps - int(gps))*1000000))
+        return gt.replace(microsecond=ms, tzinfo=tzutc())
+
 
     @classmethod
     def parse(cls, string='now'):
@@ -318,7 +323,7 @@ class gpstime(datetime):
 
     def gps(self):
         """Return GPS time as a float."""
-        return float(unix2gps(self.timestamp()))
+        return unix2gps(self.timestamp())
 
     def iso(self):
         """Return time in standard UTC ISO format"""
