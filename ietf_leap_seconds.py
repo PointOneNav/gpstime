@@ -130,18 +130,19 @@ def load_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
     Find valid local leap second list data and return an IETFLeapData
     object.  If a `leapfile` argument is provided or the IETF_LEAPFILE
     environment variable is set the specified file will be used.
-    Otherwiseis specified the user cache location (LEAPFILE_USER) and
-    system cache location (LEAPFILE_SYSTEM) will be examined.  If no
-    valid files are found and the `update` flag is True the user cache
-    file will updated if expired.
+    Otherwise the specified the user cache location (LEAPFILE_USER)
+    and system cache location (LEAPFILE_SYSTEM) will be examined.  If
+    no valid files are found and the `update` flag is True the user
+    cache file will updated if expired.
 
     """
     if leapfile:
-        leapfiles = [leapfile]
-    else:
-        leapfiles = LEAPFILES
+        ld = IETFLeapData(leapfile)
+        ld._warn_expired()
+        return ld
+
     ld = None
-    for lf in leapfiles:
+    for lf in LEAPFILES:
         try:
             ld = IETFLeapData(lf)
         except IOError:
@@ -150,7 +151,7 @@ def load_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
             break
     if not ld and not update:
         raise IETFNoDataError("No leap data files found.  Run with 'update=True' to download user cache.")
-    elif (not ld or (ld and ld.expired)) and not leapfile and update:
+    elif (not ld or (ld and ld.expired)) and update:
         if notify:
             print("updating user leap second data from IETF...", file=sys.stderr)
         leapfile = LEAPFILE_USER
