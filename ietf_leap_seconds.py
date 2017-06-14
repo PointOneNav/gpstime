@@ -84,6 +84,10 @@ class IETFLeapData(object):
         """True if leap second data is expired"""
         return ntp2dt(self.expire) <= datetime.utcnow().replace(tzinfo=tzlocal())
 
+    def _warn_expired(self):
+        if self.expired:
+            warnings.warn("Leap second data is expired.", RuntimeWarning)
+
     def __iter__(self):
         """generator of leap seconds as NTP timestamps"""
         for leap in self.data:
@@ -126,18 +130,19 @@ def load_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
     Find valid local leap second list data and return an IETFLeapData
     object.  If a `leapfile` argument is provided or the IETF_LEAPFILE
     environment variable is set the specified file will be used.
-    Otherwiseis specified the user cache location (LEAPFILE_USER) and
-    system cache location (LEAPFILE_SYSTEM) will be examined.  If no
-    valid files are found and the `update` flag is True the user cache
-    file will updated if expired.
+    Otherwise the specified the user cache location (LEAPFILE_USER)
+    and system cache location (LEAPFILE_SYSTEM) will be examined.  If
+    no valid files are found and the `update` flag is True the user
+    cache file will updated if expired.
 
     """
     if leapfile:
-        leapfiles = [leapfile]
-    else:
-        leapfiles = LEAPFILES
+        ld = IETFLeapData(leapfile)
+        ld._warn_expired()
+        return ld
+
     ld = None
-    for lf in leapfiles:
+    for lf in LEAPFILES:
         try:
             ld = IETFLeapData(lf)
         except IOError:
@@ -146,14 +151,13 @@ def load_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
             break
     if not ld and not update:
         raise IETFNoDataError("No leap data files found.  Run with 'update=True' to download user cache.")
-    elif (not ld or (ld and ld.expired)) and not leapfile and update:
+    elif (not ld or (ld and ld.expired)) and update:
         if notify:
             print("updating user leap second data from IETF...", file=sys.stderr)
         leapfile = LEAPFILE_USER
         fetch_leapfile(leapfile)
         ld = IETFLeapData(leapfile)
-    if ld.expired:
-        warnings.warn("Leap second data is expired.", RuntimeWarning)
+    ld._warn_expired()
     return ld
 
 ##################################################
@@ -190,22 +194,18 @@ leap second list file path.
                    help="print leap seconds in ISO format")
     g.add_argument('-f', '--format',
                    help="specify leap seconds time format (see python strftime)")
-    g.add_argument('-u', '--update', action='store_true',
-                   help="update IETF leap second list file at the specified path")
-    parser.add_argument('leapfile', nargs='?',
-                        help="IETF leap seconds list file")
+    g.add_argument('-u', '--update', metavar='PATH',
+                   help="update IETF leap second list file at specified path")
 
     args = parser.parse_args()
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        if args.update:
-            if not args.leapfile:
-                sys.exit("Must specify path for update.")
-            fetch_leapfile(args.leapfile)
-            ld = IETFLeapData(args.leapfile)
-        else:
-            ld = load_leapdata(args.leapfile, notify=True)
+    if args.update:
+        fetch_leapfile(args.update)
+        ld = IETFLeapData(args.update)
+    else:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            ld = load_leapdata(notify=True)
 
     if ld.expired:
         print("WARNING: Leap second data is expired.", file=sys.stderr)
