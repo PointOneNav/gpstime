@@ -193,22 +193,18 @@ leap second list file path.
                    help="print leap seconds in ISO format")
     g.add_argument('-f', '--format',
                    help="specify leap seconds time format (see python strftime)")
-    g.add_argument('-u', '--update', action='store_true',
-                   help="update IETF leap second list file at the specified path")
-    parser.add_argument('leapfile', nargs='?',
-                        help="IETF leap seconds list file")
+    g.add_argument('-u', '--update', metavar='PATH',
+                   help="update IETF leap second list file at specified path")
 
     args = parser.parse_args()
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        if args.update:
-            if not args.leapfile:
-                sys.exit("Must specify path for update.")
-            fetch_leapfile(args.leapfile)
-            ld = IETFLeapData(args.leapfile)
-        else:
-            ld = load_leapdata(args.leapfile, notify=True)
+    if args.update:
+        fetch_leapfile(args.update)
+        ld = IETFLeapData(args.update)
+    else:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            ld = load_leapdata(notify=True)
 
     if ld.expired:
         print("WARNING: Leap second data is expired.", file=sys.stderr)
