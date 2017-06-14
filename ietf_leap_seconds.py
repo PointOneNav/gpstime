@@ -84,6 +84,10 @@ class IETFLeapData(object):
         """True if leap second data is expired"""
         return ntp2dt(self.expire) <= datetime.utcnow().replace(tzinfo=tzlocal())
 
+    def _warn_expired(self):
+        if self.expired:
+            warnings.warn("Leap second data is expired.", RuntimeWarning)
+
     def __iter__(self):
         """generator of leap seconds as NTP timestamps"""
         for leap in self.data:
@@ -152,8 +156,7 @@ def load_leapdata(leapfile=os.getenv('IETF_LEAPFILE'),
         leapfile = LEAPFILE_USER
         fetch_leapfile(leapfile)
         ld = IETFLeapData(leapfile)
-    if ld.expired:
-        warnings.warn("Leap second data is expired.", RuntimeWarning)
+    ld._warn_expired()
     return ld
 
 ##################################################
