@@ -216,3 +216,12 @@ def gpsnow():
 
     """
     return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
+
+
+def parse(s):
+    """Return gpstime object for parsed time string
+
+    Equivalent to gpstime.parse().
+
+    """
+    return gpstime.parse(s)
