@@ -8,7 +8,7 @@ setup(
     description = 'GPS-aware datetime module',
     author = 'Jameson Graef Rollins',
     author_email = 'jameson.rollins@ligo.org',
-    url = 'https://git.ligo.org/jameson.rollins/gpstime',
+    url = 'https://git.ligo.org/cds/gpstime',
     license = 'GNU GPL v3+',
 
     packages = ['gpstime'],
