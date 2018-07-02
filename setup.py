@@ -14,9 +14,10 @@ setup(
     packages = ['gpstime'],
     py_modules = ['ietf_leap_seconds'],
 
-    # install_requires = [
-    #     'dateutil'
-    #     ],
+    install_requires = [
+        'python-dateutil',
+        'requests',
+    ],
 
     test_suite = 'gpstime.test',
 
