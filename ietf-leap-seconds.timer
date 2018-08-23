@@ -2,8 +2,9 @@
 Description=IETF leap second data update timer
 
 [Timer]
-OnCalendar=weekly
-RandomizedDelaySec=3600
+OnBootSec=5m
+OnActiveSec=1m
+RandomizedDelaySec=60
 Persistent=true
 
 [Install]

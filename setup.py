@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'gpstime',
-    version = '0.2',
+    version = '0.3.1',
     description = 'GPS-aware datetime module',
     author = 'Jameson Graef Rollins',
     author_email = 'jameson.rollins@ligo.org',
@@ -14,9 +14,10 @@ setup(
     packages = ['gpstime'],
     py_modules = ['ietf_leap_seconds'],
 
-    # install_requires = [
-    #     'dateutil'
-    #     ],
+    install_requires = [
+        'python-dateutil',
+        'requests',
+    ],
 
     test_suite = 'gpstime.test',
 
