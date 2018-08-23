@@ -1,4 +1,4 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: gpstime
 Upstream-Contact: Jameson Graef Rollins <jameson.rollins@ligo.org>
 Source: https://git.ligo.org/jameson.rollins/gpstime
