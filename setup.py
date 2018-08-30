@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'gpstime',
-    version = '0.3.1',
+    version = '0.3.2',
     description = 'GPS-aware datetime module',
     author = 'Jameson Graef Rollins',
     author_email = 'jameson.rollins@ligo.org',
