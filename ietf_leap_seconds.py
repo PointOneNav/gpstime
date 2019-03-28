@@ -12,7 +12,6 @@ file is given in the LEAPFILE_LOCAL variable.
 from __future__ import print_function
 import os
 import sys
-import requests
 import warnings
 import traceback
 from datetime import datetime
@@ -109,6 +108,7 @@ def fetch_leapfile(path):
     Downloaded file will be parsed/validated before writing to path.
 
     """
+    import requests
     dd = os.path.dirname(path)
     if dd != '' and not os.path.exists(dd):
         os.makedirs(dd)
