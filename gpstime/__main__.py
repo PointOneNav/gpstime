@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys
 import argparse
 from dateutil.tz import tzutc, tzlocal
-import ietf_leap_seconds
+
 from ._version import version
 from . import ISO_FORMAT, gpstime, GPSTimeException
 
