@@ -22,11 +22,7 @@ from dateutil.tz import tzutc, tzlocal
 
 import ietf_leap_seconds
 
-import pkg_resources
-try:
-    __version__ = pkg_resources.require('gpstime')[0].version
-except:
-    __version__ = '?.?.?'
+from ._version import version as __version__
 
 ##################################################
 

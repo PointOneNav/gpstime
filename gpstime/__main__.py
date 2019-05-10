@@ -3,6 +3,7 @@ import sys
 import argparse
 from dateutil.tz import tzutc, tzlocal
 import ietf_leap_seconds
+from ._version import version
 from . import ISO_FORMAT, gpstime, GPSTimeException
 
 
@@ -16,7 +17,7 @@ https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
 """,
     formatter_class=argparse.RawDescriptionHelpFormatter)
 PARSER.add_argument(
-    '-v', '--version', action='store_true',
+    '-v', '--version', action='version', version=version,
     help="print version number and exit")
 zg = PARSER.add_mutually_exclusive_group()
 zg.add_argument(
@@ -47,9 +48,6 @@ def tzname(tz):
 
 def main():
     args = PARSER.parse_args()
-    if args.version:
-        print(__version__)
-        sys.exit()
 
     try:
         gt = gpstime.parse(' '.join(args.time))
