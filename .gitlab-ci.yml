@@ -1,0 +1,131 @@
+stages:
+  - test
+  - build
+  - docs
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: "${CI_JOB_NAME}"
+  paths:
+    - .cache/pip
+
+# -- test -------------------
+
+.test: &test
+  image: python
+  before_script:
+    # install testing dependencies
+    - python -m pip install pytest pytest-cov
+  script:
+    # install package (using -e to get script coverage)
+    - python -m pip install -e ${CI_PROJECT_DIR}
+    # run tests
+    - python -m pytest gpstime/test.py -v --cov gpstime --cov-report= --junitxml="junit.xml"
+    - python -m coverage run -a $(which gpstime)
+    - python -m coverage run -a $(which ietf-leap-seconds)
+    - python -m coverage report
+  artifacts:
+    reports:
+      junit: junit.xml
+
+test:2.7:
+  <<: *test
+  image: python:2.7
+
+test:3.5:
+  <<: *test
+  image: python:3.5
+
+test:3.6:
+  <<: *test
+  image: python:3.6
+
+test:3.7:
+  <<: *test
+  image: python:3.7
+
+# -- build ------------------
+
+.build:debian: &build-debian
+  only:
+    - /^debian.*$/
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -yq
+          dpkg-dev
+          devscripts
+          lintian
+  script:
+    - mkdir -pv dist
+    # install build dependencies
+    - mk-build-deps --tool "apt-get -y" --install --remove
+    # build packages
+    - dpkg-buildpackage -us -uc -b
+    # lint packages
+    - lintian ../gpstime_*.changes
+    # move things into dist/
+    - mv -v ../{python,python3}-gpstime_*.deb ../{python,python3}-ietf-leap-seconds*.deb ../gpstime_*.{buildinfo,changes} dist/
+  artifacts:
+    paths:
+      - dist/
+
+build:debian:jessie:
+  <<: *build-debian
+  image: debian:jessie
+
+build:debian:stretch:
+  <<: *build-debian
+  image: debian:stretch
+
+build:debian:buster:
+  <<: *build-debian
+  image: debian:buster
+
+# -- docs -------------------
+
+docs:
+  stage: docs
+  image: python
+  before_script:
+    # install docs requirements
+    - python -m pip install sphinx sphinx_rtd_theme
+    # install this package
+    - python -m pip install .
+  script:
+    - _version=$(python setup.py --version)
+    - mkdir -v docs
+    - cd docs
+    # generate docs skeleton
+    - python -m sphinx.ext.apidoc
+          --module-first
+          --separate
+          --full
+          --ext-autodoc
+          --ext-intersphinx
+          --doc-project "gpstime"
+          --doc-author "California Institute of Technology"
+          --doc-version "${_version}"
+          --output-dir .
+          ../gpstime
+    # use sphinx_rtd_theme
+    - sed -i 's/alabaster/sphinx_rtd_theme/g' conf.py
+    # run sphinx to generate docs
+    - python -m sphinx -b html . html
+  artifacts:
+    paths:
+      - docs/html
+
+pages:
+  stage: deploy
+  dependencies:
+    - docs
+  only:
+    - tags
+  script:
+    - mv docs/html public
+  artifacts:
+    paths:
+      - public
