@@ -30,13 +30,12 @@ zg.add_argument(
     '-g', '--gps', action='store_const', dest='tz', const='gps',
     help="print only GPS time")
 fg = PARSER.add_mutually_exclusive_group()
-fg.set_defaults(format='%Y-%m-%d %H:%M:%S.%f %Z')
 fg.add_argument(
     '-i', '--iso', action='store_const', dest='format', const=ISO_FORMAT,
     help="use ISO time format")
 fg.add_argument(
     '-f', '--format',
-    help="specify time format (see below)")
+    help="specify time format (see below), or printf numeric format for GPS times")
 PARSER.add_argument(
     'time', metavar='TIME', nargs=argparse.REMAINDER, default='now',
     help="time string in any format (including GPS), or current time if not specified")
@@ -48,6 +47,12 @@ def tzname(tz):
 
 def main():
     args = PARSER.parse_args()
+
+    if not args.format:
+        if args.tz == 'gps':
+            args.format = '%.6f'
+        else:
+            args.format = '%Y-%m-%d %H:%M:%S.%f %Z'
 
     try:
         gt = gpstime.parse(' '.join(args.time))
@@ -61,7 +66,7 @@ def main():
         print('{}: {}'.format('UTC', gt.astimezone(utz).strftime(args.format)))
         print('{}: {:.6f}'.format('GPS', gt.gps()))
     elif args.tz == 'gps':
-        print('{:.6f}'.format(gt.gps()))
+        print(args.format % gt.gps())
     else:
         if args.tz == 'local':
             tz = tzlocal()
