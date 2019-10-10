@@ -17,6 +17,7 @@ setup(
     license='GNU GPL v3+',
 
     packages=['gpstime'],
+    scripts=['bin/gpstime'],
 
     install_requires=[
         'python-dateutil',
@@ -24,11 +25,4 @@ setup(
     ],
 
     test_suite='gpstime.test',
-
-    # https://chriswarrick.com/blog/2014/09/15/python-apps-the-right-way-entry_points-and-scripts/
-    entry_points={
-        'console_scripts': [
-            'gpstime = gpstime.__main__:main',
-            ],
-        }
 )

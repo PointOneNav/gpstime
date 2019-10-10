@@ -24,7 +24,7 @@ cache:
     - python -m pip install -e ${CI_PROJECT_DIR}
     # run tests
     - python -m pytest gpstime/test.py -v --cov gpstime --cov-report= --junitxml="junit.xml"
-    - python -m coverage run -a $(which gpstime)
+    #- python -m coverage run -a $(which gpstime)
     - python -m coverage report
   artifacts:
     reports:
