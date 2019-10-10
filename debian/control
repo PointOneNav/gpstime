@@ -12,10 +12,12 @@ Build-Depends:
  python-dateutil,
  python-requests,
  python-setuptools,
+ python-setuptools-scm,
  python3-all,
  python3-dateutil,
  python3-requests,
  python3-setuptools,
+ python3-setuptools-scm,
 X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.2
 
