@@ -155,28 +155,26 @@ class gpstime(datetime):
         """Parse an arbitrary time string into a gpstime object.
 
         If string not specified 'now' is assumed.  Strings that can be
-        cast to float are assumed to be GPS time.  Prepend '@' to
-        specify a UNIX timestamp.
+        cast to float are assumed to be GPS times.  Prepend '@' to a
+        float to specify a UNIX timestamp.
 
         This parse uses the natural lanuage parsing abilities of the
         GNU coreutils 'date' utility.  See "DATE STRING" in date(1)
         for information on possible date/time descriptions.
 
         """
-        if not string:
-            string = 'now'
+        if not string or string == 'now':
+            return cls.now().replace(tzinfo=tzlocal())
         try:
             gps = float(string)
         except ValueError:
             gps = None
+        except TypeError:
+            raise TypeError("Time specification must be a string, not {!s}".format(type(string)))
         if gps:
-            gt = cls.fromgps(gps)
-        elif string == 'now':
-            gt = cls.now().replace(tzinfo=tzlocal())
-        else:
-            ts = cudate(string)
-            gt = cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
-        return gt
+            return cls.fromgps(gps)
+        ts = cudate(string)
+        return cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
 
     tconvert = parse
 
@@ -217,10 +215,4 @@ def gpsnow():
     return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
 
 
-def parse(s):
-    """Return gpstime object for parsed time string.
-
-    Equivalent to gpstime.parse().
-
-    """
-    return gpstime.parse(s)
+parse = gpstime.parse
