@@ -5,6 +5,7 @@ from dateutil.tz import tzutc, tzlocal
 
 from ._version import version
 from . import ISO_FORMAT, gpstime, GPSTimeException
+from . import LEAPDATA
 
 
 PARSER = argparse.ArgumentParser(
@@ -46,6 +47,8 @@ def tzname(tz):
 
 
 def main():
+    LEAPDATA.update_local()
+
     args = PARSER.parse_args()
 
     if not args.format:

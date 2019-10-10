@@ -5,8 +5,12 @@ and GPS times, as well as a `gpstime` class that directly inherits
 from the builtin `datetime` class, adding additional methods for GPS
 time input and output.
 
-Leap seconds come from the ietf_leap_seconds module provided with this
-module.
+Leap seconds are expected to be provided by the core libc Time Zone
+Database tzdata.  If for some reason the tzdata leapsecond file is not
+available, a local cache of the IETF leap second record will be
+maintained:
+
+  https://www.ietf.org/timezones/data/leap-seconds.list
 
 KNOWN BUGS: This module does not currently handle conversions of time
 strings describing the actual leap second themselves, which are
@@ -20,9 +24,9 @@ import warnings
 import subprocess
 from dateutil.tz import tzutc, tzlocal
 
-import ietf_leap_seconds
 
 from ._version import version as __version__
+from .leaps import LEAPDATA
 
 ##################################################
 
@@ -32,11 +36,6 @@ ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 GPS0 = 315964800
 
 ##################################################
-# load leap seconds
-
-LEAPDATA = ietf_leap_seconds.load_leapdata(notify=True)
-
-##################################################
 
 def unix2gps(unix):
     """Convert UNIX timestamp to GPS time.
@@ -44,7 +43,7 @@ def unix2gps(unix):
     """
     unix = float(unix)
     gps = unix - GPS0
-    for leap in LEAPDATA.as_unix():
+    for leap in LEAPDATA:
         if leap < GPS0:
             continue
         if unix < leap:
@@ -52,13 +51,14 @@ def unix2gps(unix):
         gps += 1
     return gps
 
+
 def gps2unix(gps):
     """Convert GPS time to UNIX timestamp.
 
     """
     gps = float(gps)
     unix = gps + GPS0
-    for leap in LEAPDATA.as_unix():
+    for leap in LEAPDATA:
         if leap < GPS0:
             continue
         if unix < leap:
