@@ -1,6 +1,4 @@
 #!/usr/bin/make -f
 
-IETF_LEAPFILE = leap-seconds.list
-
 %:
-	IETF_LEAPFILE=$(IETF_LEAPFILE) dh $@ --with python2,python3 --buildsystem=pybuild --with systemd
+	dh $@ --with python2,python3 --buildsystem=pybuild

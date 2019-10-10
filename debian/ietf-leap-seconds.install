@@ -1,3 +1,0 @@
-ietf-leap-seconds.service lib/systemd/system
-ietf-leap-seconds.timer lib/systemd/system
-leap-seconds.list var/cache/ietf-leap-seconds
