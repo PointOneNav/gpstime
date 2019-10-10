@@ -18,12 +18,11 @@ usually represented as the 60th second of the minute during which the
 leap second occurs.
 
 """
-
 from datetime import datetime
 import warnings
 import subprocess
-from dateutil.tz import tzutc, tzlocal
 
+from dateutil.tz import tzutc, tzlocal
 
 from ._version import version as __version__
 from .leaps import LEAPDATA
@@ -71,6 +70,7 @@ def gps2unix(gps):
 class GPSTimeException(Exception):
     pass
 
+
 def cudate(string='now'):
     """Parse date/time string to UNIX timestamp with GNU coreutils date
 
@@ -81,6 +81,7 @@ def cudate(string='now'):
     except subprocess.CalledProcessError:
         raise GPSTimeException("could not parse string '{}'".format(string))
     return float(ts)
+
 
 def dt2ts(dt):
     """Return UNIX timestamp for datetime object.
@@ -132,9 +133,11 @@ class gpstime(datetime):
         tzinfo = datetime.tzinfo
         if tzinfo is None:
             tzinfo = tzlocal()
-        cls = gpstime(datetime.year, datetime.month, datetime.day,
-                      datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
-                      tzinfo)
+        cls = gpstime(
+            datetime.year, datetime.month, datetime.day,
+            datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
+            tzinfo,
+        )
         return cls
 
     @classmethod
@@ -186,7 +189,7 @@ class gpstime(datetime):
         return unix2gps(self.timestamp())
 
     def iso(self):
-        """Return time in standard UTC ISO format"""
+        """Return time in standard UTC ISO format."""
         return self.strftime(ISO_FORMAT)
 
 
@@ -208,14 +211,14 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
 
 
 def gpsnow():
-    """Return current GPS time
+    """Return current GPS time as a float.
 
     """
     return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
 
 
 def parse(s):
-    """Return gpstime object for parsed time string
+    """Return gpstime object for parsed time string.
 
     Equivalent to gpstime.parse().
 
