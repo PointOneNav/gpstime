@@ -25,7 +25,6 @@ cache:
     # run tests
     - python -m pytest gpstime/test.py -v --cov gpstime --cov-report= --junitxml="junit.xml"
     - python -m coverage run -a $(which gpstime)
-    - python -m coverage run -a $(which ietf-leap-seconds)
     - python -m coverage report
   artifacts:
     reports:
@@ -67,7 +66,7 @@ test:3.7:
     # lint packages
     - lintian ../gpstime_*.changes
     # move things into dist/
-    - mv -v ../{python,python3}-gpstime_*.deb ../{python,python3}-ietf-leap-seconds*.deb ../gpstime_*.{buildinfo,changes} dist/
+    - mv -v ../{python,python3}-gpstime_*.deb ../gpstime_*.{buildinfo,changes} dist/
   artifacts:
     paths:
       - dist/
