@@ -20,6 +20,7 @@ leap second occurs.
 """
 from datetime import datetime
 import warnings
+import argparse
 import subprocess
 
 from dateutil.tz import tzutc, tzlocal
@@ -216,3 +217,21 @@ def gpsnow():
 
 
 parse = gpstime.parse
+
+
+class GPSTimeParseAction(argparse.Action):
+    """gpstime argparse argumention parser Action.
+
+    Parses an arbitrary date/time string into a gpstime object.
+
+    """
+    def __call__(self, parser, namespace, values, option_string=False):
+        # FIXME: support parsing argparse.REMAINDER values list into a
+        # single string
+        try:
+            gps = parse(values)
+        except TypeError:
+            gps = [parse(value) for value in values]
+        except GPSTimeException:
+            parser.error("Could not parse date/time string '{}'".format(values))
+        setattr(namespace, self.dest, gps)

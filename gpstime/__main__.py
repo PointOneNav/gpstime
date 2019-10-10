@@ -1,11 +1,10 @@
 from __future__ import print_function
-import sys
 import argparse
 
 from dateutil.tz import tzutc, tzlocal
 
 from ._version import version
-from . import ISO_FORMAT, gpstime, GPSTimeException
+from . import ISO_FORMAT, gpstime, GPSTimeParseAction
 from . import LEAPDATA
 
 
@@ -39,7 +38,7 @@ fg.add_argument(
     '-f', '--format',
     help="specify time format (see below), or printf numeric format for GPS times")
 PARSER.add_argument(
-    'time', metavar='TIME', nargs=argparse.REMAINDER, default='now',
+    'time', metavar='TIME', action=GPSTimeParseAction, nargs='?', default='now',
     help="time string in any format (including GPS), or current time if not specified")
 
 
@@ -58,10 +57,7 @@ def main():
         else:
             args.format = '%Y-%m-%d %H:%M:%S.%f %Z'
 
-    try:
-        gt = gpstime.parse(' '.join(args.time))
-    except GPSTimeException as e:
-        sys.exit("Error: {}".format(e))
+    gt = args.time
 
     if not args.tz:
         ltz = tzlocal()
