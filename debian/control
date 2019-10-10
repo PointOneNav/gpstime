@@ -1,5 +1,5 @@
 Source: gpstime
-Section: science
+Section: python
 Priority: optional
 Maintainer: Jameson Graef Rollins <jameson.rollins@ligo.org>
 Standards-Version: 3.9.8
@@ -18,8 +18,6 @@ Build-Depends:
  python3-requests,
  python3-setuptools,
  python3-setuptools-scm,
-X-Python-Version: >= 2.6
-X-Python3-Version: >= 3.2
 
 Package: python-gpstime
 Architecture: all
@@ -41,7 +39,7 @@ Description: GPS-aware Python3 datetime module
  Provides a gpstime class that extends the built-in datetime class to
  include GPS time conversion methods.
  .
- Python3 compatibility.
+ Python3 support.
 
 Package: gpstime
 Architecture: all
