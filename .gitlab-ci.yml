@@ -71,10 +71,6 @@ test:3.7:
     paths:
       - dist/
 
-build:debian:jessie:
-  <<: *build-debian
-  image: debian:jessie
-
 build:debian:stretch:
   <<: *build-debian
   image: debian:stretch
