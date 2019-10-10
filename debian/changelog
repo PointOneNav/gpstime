@@ -1,3 +1,10 @@
+gpstime (0.4-1) unstable; urgency=medium
+
+  * New release
+  * drop ietf-leap-seconds packages (dropped upstream)
+
+ -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Wed, 09 Oct 2019 21:52:37 -0700
+
 gpstime (0.3.2-1) unstable; urgency=medium
 
   * New minor release
