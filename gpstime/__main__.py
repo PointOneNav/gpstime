@@ -51,6 +51,9 @@ def main():
 
     args = PARSER.parse_args()
 
+    if args.tz == 'gps' and args.format == ISO_FORMAT:
+        PARSER.error("argument -g/--gps: not allowed with argument -i/--iso")
+
     if not args.format:
         if args.tz == 'gps':
             args.format = '%.6f'
