@@ -1,3 +1,10 @@
+gpstime (0.4.1-1) unstable; urgency=medium
+
+  * New release
+  * fix cli library dependency
+
+ -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Fri, 01 Nov 2019 16:47:34 -0700
+
 gpstime (0.4-1) unstable; urgency=medium
 
   * New release
