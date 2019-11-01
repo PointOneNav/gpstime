@@ -51,6 +51,9 @@ def main():
 
     args = PARSER.parse_args()
 
+    if args.tz == 'gps' and args.format == ISO_FORMAT:
+        PARSER.error("argument -g/--gps: not allowed with argument -i/--iso")
+
     if not args.format:
         if args.tz == 'gps':
             args.format = '%.6f'
@@ -70,6 +73,8 @@ def main():
     else:
         if args.tz == 'local':
             tz = tzlocal()
+            if args.format == ISO_FORMAT:
+                args.format = args.format[:-1]
         elif args.tz == 'utc':
             tz = tzutc()
         print('{}'.format(gt.astimezone(tz).strftime(args.format)))
