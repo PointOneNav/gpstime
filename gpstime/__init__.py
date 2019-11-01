@@ -189,7 +189,7 @@ class gpstime(datetime):
 
     def iso(self):
         """Return time in standard UTC ISO format."""
-        return self.strftime(ISO_FORMAT)
+        return self.astimezone(tzutc()).strftime(ISO_FORMAT)
 
 
 def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
