@@ -44,7 +44,7 @@ Description: GPS-aware Python3 datetime module
 Package: gpstime
 Architecture: all
 Depends:
- python3-gpstime,
+ python3-gpstime (= ${source:Version}),
  ${misc:Depends},
  ${python3:Depends},
 Description: GPS time conversion utility
