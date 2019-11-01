@@ -70,6 +70,8 @@ def main():
     else:
         if args.tz == 'local':
             tz = tzlocal()
+            if args.format == ISO_FORMAT:
+                args.format = args.format[:-1]
         elif args.tz == 'utc':
             tz = tzutc()
         print('{}'.format(gt.astimezone(tz).strftime(args.format)))
