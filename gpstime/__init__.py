@@ -174,7 +174,12 @@ class gpstime(datetime):
             raise TypeError("Time specification must be a string, not {!s}".format(type(string)))
         if gps:
             return cls.fromgps(gps)
-        ts = cudate(string)
+        try:
+            ts = cudate(string)
+        except GPSTimeException:
+            # try again in case this was an ISO string using
+            # underscore instead of T as the separator
+            ts = cudate(string.replace('_', 'T'))
         return cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
 
     tconvert = parse
