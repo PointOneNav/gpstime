@@ -82,13 +82,9 @@ class TestGPStime(unittest.TestCase):
         self.assertEqual(gpstime.gpstime.parse('2015-12-08T04:54:19.200000Z').iso(),
                          '2015-12-08T04:54:19.200000Z')
 
-    def test_gpstime_parse_iso_local(self):
-        self.assertEqual(gpstime.gpstime.parse('2015-12-08T04:54:19.200000').iso(),
-                         '2015-12-08T12:54:19.200000Z')
-
     def test_gpstime_parse_iso_alt(self):
-        self.assertEqual(gpstime.gpstime.parse('2015-12-08_04:54:19.200000').iso(),
-                         '2015-12-08T12:54:19.200000Z')
+        self.assertEqual(gpstime.gpstime.parse('2015-12-08_04:54:19.200000Z').iso(),
+                         '2015-12-08T04:54:19.200000Z')
 
     def test_gpstime_parse_timestamp(self):
         self.assertEqual(gpstime.gpstime.parse('@1474821047').gps(),
