@@ -1,20 +1,28 @@
 from setuptools import setup
 
+from gpstime import __version__
+
+with open('README.md', 'rb') as f:
+    longdesc = f.read().decode().strip()
 
 setup(
-    setup_requires=[
-        'setuptools_scm',
-    ],
-    use_scm_version={
-        'write_to': 'gpstime/_version.py',
-    },
-
     name='gpstime',
+    version=__version__,
     description='GPS-aware datetime module',
+    long_description=longdesc,
+    long_description_content_type='text/markdown',
     author='Jameson Graef Rollins',
     author_email='jameson.rollins@ligo.org',
     url='https://git.ligo.org/cds/gpstime',
-    license='GNU GPL v3+',
+    license='GPL-3.0-or-later',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        ('License :: OSI Approved :: '
+         'GNU General Public License v3 or later (GPLv3+)'),
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python3',
+    ],
 
     packages=['gpstime'],
     scripts=['bin/gpstime'],
