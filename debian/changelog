@@ -1,3 +1,9 @@
+gpstime (0.4.4-1) unstable; urgency=medium
+
+  * New release
+
+ -- Jameson Graef Rollins <jameson.rollins@ligo.org>  Wed, 04 Dec 2019 15:26:19 -0800
+
 gpstime (0.4.3-1) unstable; urgency=medium
 
   * New release
