@@ -3,7 +3,7 @@ import argparse
 
 from dateutil.tz import tzutc, tzlocal
 
-from ._version import version
+from .__version__ import __version__
 from . import ISO_FORMAT, gpstime, GPSTimeParseAction
 from . import LEAPDATA
 
@@ -18,7 +18,7 @@ https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
 """,
     formatter_class=argparse.RawDescriptionHelpFormatter)
 PARSER.add_argument(
-    '-v', '--version', action='version', version=version,
+    '-v', '--version', action='version', version=__version__,
     help="print version number and exit")
 zg = PARSER.add_mutually_exclusive_group()
 zg.add_argument(
