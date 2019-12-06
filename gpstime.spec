@@ -1,20 +1,20 @@
 Name:           gpstime
-Version:        0.3.2
+Version:        0.4.4
 Release:        1%{?dist}
 Summary:        LIGO GPS time libraries
 
 License:        GPLv3+
 URL:            http://www.ligo.org
-# git archive --format zip --prefix gpstime-0.3.2/ --remote=git@git.ligo.org:cds/gpstime.git -o SOURCES/gpstime-0.3.2.zip tags/0.3.2
-Source0:       %{name}-%{version}.zip
+# git archive --format zip --prefix gpstime-0.4.4/ --remote=git@git.ligo.org:cds/gpstime.git -o SOURCES/gpstime-0.4.4.zip tags/0.4.4
+Source0:        %{name}-%{version}.zip
+#Source1:	ietf-leap-seconds.service
+#Source2:	ietf-leap-seconds.timer
 
 BuildArch:      noarch
 BuildRequires:  python2-devel
 BuildRequires:  python2-setuptools
 BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python%{python3_pkgversion}-devel
-BuildRequires:  python%{python3_other_pkgversion}-setuptools
-BuildRequires:  python%{python3_other_pkgversion}-devel
 %{?systemd_requires}
 BuildRequires:	systemd
 
@@ -43,80 +43,62 @@ Requires:	python%{python3_pkgversion}-requests
 %description -n python%{python3_pkgversion}-%{name}
 GPS time libraries for LIGO automation software
 
-%package -n     python%{python3_other_pkgversion}-%{name}
-Summary:        LIGO GPS time libraries
-Requires:	python%{python3_other_pkgversion}-dateutil
-Requires:	python%{python3_other_pkgversion}-requests
-%{?python_provide:%python_provide python%{python3_other_pkgversion}-%{name}}
-%description -n python%{python3_other_pkgversion}-%{name}
-GPS time libraries for LIGO automation software
-
 
 %prep
 %setup -q
-#sed -i -e 's/python3/python/' ietf-leap-seconds.service
 
 
 %build
 %py2_build
-%py3_other_build
 %py3_build
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%py3_other_install
-
-mv $RPM_BUILD_ROOT%{_bindir}/gpstime $RPM_BUILD_ROOT%{_bindir}/python%{python3_other_pkgversion}-gpstime
-mv $RPM_BUILD_ROOT%{_bindir}/ietf-leap-seconds $RPM_BUILD_ROOT%{_bindir}/python%{python3_other_pkgversion}-ietf-leap-seconds
-
-%py3_install
-
-mv $RPM_BUILD_ROOT%{_bindir}/gpstime $RPM_BUILD_ROOT%{_bindir}/python%{python3_pkgversion}-gpstime
-mv $RPM_BUILD_ROOT%{_bindir}/ietf-leap-seconds $RPM_BUILD_ROOT%{_bindir}/python%{python3_pkgversion}-ietf-leap-seconds
 
 %py2_install
 
-mkdir -p $RPM_BUILD_ROOT/var/cache/ietf-leap-seconds
-touch $RPM_BUILD_ROOT/var/cache/ietf-leap-seconds/leap-seconds.list
-mkdir -p $RPM_BUILD_ROOT%{_unitdir}
-install -m 0644 ietf-leap-seconds.service $RPM_BUILD_ROOT%{_unitdir}/
-install -m 0644 ietf-leap-seconds.timer $RPM_BUILD_ROOT%{_unitdir}/
+%py3_install
+
+#mkdir -p $RPM_BUILD_ROOT/var/cache/ietf-leap-seconds
+#touch $RPM_BUILD_ROOT/var/cache/ietf-leap-seconds/leap-seconds.list
+#mkdir -p $RPM_BUILD_ROOT%{_unitdir}
+#install -m 0644 %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}/
+#install -m 0644 %{SOURCE2} $RPM_BUILD_ROOT%{_unitdir}/
 
 
-%post services
-%systemd_post ietf-leap-seconds.service
-%systemd_post ietf-leap-seconds.timer
+#%post services
+#%systemd_post ietf-leap-seconds.service
+#%systemd_post ietf-leap-seconds.timer
+#
+#%preun services
+#%systemd_preun ietf-leap-seconds.service
+#%systemd_preun ietf-leap-seconds.timer
+#
+#%postun services
+#%systemd_postun ietf-leap-seconds.service
+#%systemd_postun ietf-leap-seconds.timer
 
-%preun services
-%systemd_preun ietf-leap-seconds.service
-%systemd_preun ietf-leap-seconds.timer
-
-%postun services
-%systemd_postun ietf-leap-seconds.service
-%systemd_postun ietf-leap-seconds.timer
-
-%files services
-%dir /var/cache/ietf-leap-seconds
-%ghost /var/cache/ietf-leap-seconds/leap-seconds.list
-%{_unitdir}/ietf-leap-seconds.*
+#%files services
+#%dir /var/cache/ietf-leap-seconds
+#%ghost /var/cache/ietf-leap-seconds/leap-seconds.list
+#%{_unitdir}/ietf-leap-seconds.*
 
 %files -n python2-%{name}
 %{python2_sitelib}/*
-%{_bindir}/gpstime
-%{_bindir}/ietf-leap-seconds
+#%{_bindir}/ietf-leap-seconds
 
 %files -n python%{python3_pkgversion}-%{name}
 %{python3_sitelib}/*
-%{_bindir}/python%{python3_pkgversion}-gpstime
-%{_bindir}/python%{python3_pkgversion}-ietf-leap-seconds
-
-%files -n python%{python3_other_pkgversion}-%{name}
-%{python3_other_sitelib}/*
-%{_bindir}/python%{python3_other_pkgversion}-gpstime
-%{_bindir}/python%{python3_other_pkgversion}-ietf-leap-seconds
+%{_bindir}/gpstime
+#%{_bindir}/python%{python3_pkgversion}-ietf-leap-seconds
 
 %changelog
+* Fri Dec 6 2019 Michael Thomas <michael.thomas@LIGO.ORG> - 0.4.4-1
+- Update to 0.4.4
+- Drop python3.4 support
+- Update CLI to use python3
+
 * Thu Mar 28 2019 Michael Thomas <michael.thomas@LIGO.ORG> - 0.3.2-1
 - Updates to 0.3.2
 - Add missing dependencies
