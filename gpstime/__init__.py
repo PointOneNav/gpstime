@@ -5,8 +5,12 @@ and GPS times, as well as a `gpstime` class that directly inherits
 from the builtin `datetime` class, adding additional methods for GPS
 time input and output.
 
-Leap seconds come from the ietf_leap_seconds module provided with this
-module.
+Leap seconds are expected to be provided by the core libc Time Zone
+Database tzdata.  If for some reason the tzdata leapsecond file is not
+available, a local cache of the IETF leap second record will be
+maintained:
+
+  https://www.ietf.org/timezones/data/leap-seconds.list
 
 KNOWN BUGS: This module does not currently handle conversions of time
 strings describing the actual leap second themselves, which are
@@ -14,19 +18,15 @@ usually represented as the 60th second of the minute during which the
 leap second occurs.
 
 """
-
 from datetime import datetime
 import warnings
+import argparse
 import subprocess
+
 from dateutil.tz import tzutc, tzlocal
 
-import ietf_leap_seconds
-
-import pkg_resources
-try:
-    __version__ = pkg_resources.require('gpstime')[0].version
-except:
-    __version__ = '?.?.?'
+from .__version__ import __version__
+from .leaps import LEAPDATA
 
 ##################################################
 
@@ -36,11 +36,6 @@ ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 GPS0 = 315964800
 
 ##################################################
-# load leap seconds
-
-LEAPDATA = ietf_leap_seconds.load_leapdata(notify=True)
-
-##################################################
 
 def unix2gps(unix):
     """Convert UNIX timestamp to GPS time.
@@ -48,7 +43,7 @@ def unix2gps(unix):
     """
     unix = float(unix)
     gps = unix - GPS0
-    for leap in LEAPDATA.as_unix():
+    for leap in LEAPDATA:
         if leap < GPS0:
             continue
         if unix < leap:
@@ -56,13 +51,14 @@ def unix2gps(unix):
         gps += 1
     return gps
 
+
 def gps2unix(gps):
     """Convert GPS time to UNIX timestamp.
 
     """
     gps = float(gps)
     unix = gps + GPS0
-    for leap in LEAPDATA.as_unix():
+    for leap in LEAPDATA:
         if leap < GPS0:
             continue
         if unix < leap:
@@ -75,6 +71,7 @@ def gps2unix(gps):
 class GPSTimeException(Exception):
     pass
 
+
 def cudate(string='now'):
     """Parse date/time string to UNIX timestamp with GNU coreutils date
 
@@ -85,6 +82,7 @@ def cudate(string='now'):
     except subprocess.CalledProcessError:
         raise GPSTimeException("could not parse string '{}'".format(string))
     return float(ts)
+
 
 def dt2ts(dt):
     """Return UNIX timestamp for datetime object.
@@ -136,9 +134,11 @@ class gpstime(datetime):
         tzinfo = datetime.tzinfo
         if tzinfo is None:
             tzinfo = tzlocal()
-        cls = gpstime(datetime.year, datetime.month, datetime.day,
-                      datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
-                      tzinfo)
+        cls = gpstime(
+            datetime.year, datetime.month, datetime.day,
+            datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
+            tzinfo,
+        )
         return cls
 
     @classmethod
@@ -156,28 +156,31 @@ class gpstime(datetime):
         """Parse an arbitrary time string into a gpstime object.
 
         If string not specified 'now' is assumed.  Strings that can be
-        cast to float are assumed to be GPS time.  Prepend '@' to
-        specify a UNIX timestamp.
+        cast to float are assumed to be GPS times.  Prepend '@' to a
+        float to specify a UNIX timestamp.
 
         This parse uses the natural lanuage parsing abilities of the
         GNU coreutils 'date' utility.  See "DATE STRING" in date(1)
         for information on possible date/time descriptions.
 
         """
-        if not string:
-            string = 'now'
+        if not string or string == 'now':
+            return cls.now().replace(tzinfo=tzlocal())
         try:
             gps = float(string)
         except ValueError:
             gps = None
+        except TypeError:
+            raise TypeError("Time specification must be a string, not {!s}".format(type(string)))
         if gps:
-            gt = cls.fromgps(gps)
-        elif string == 'now':
-            gt = cls.now().replace(tzinfo=tzlocal())
-        else:
+            return cls.fromgps(gps)
+        try:
             ts = cudate(string)
-            gt = cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
-        return gt
+        except GPSTimeException:
+            # try again in case this was an ISO string using
+            # underscore instead of T as the separator
+            ts = cudate(string.replace('_', 'T'))
+        return cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
 
     tconvert = parse
 
@@ -190,8 +193,8 @@ class gpstime(datetime):
         return unix2gps(self.timestamp())
 
     def iso(self):
-        """Return time in standard UTC ISO format"""
-        return self.strftime(ISO_FORMAT)
+        """Return time in standard UTC ISO format."""
+        return self.astimezone(tzutc()).strftime(ISO_FORMAT)
 
 
 def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
@@ -212,16 +215,28 @@ def tconvert(string='now', form='%Y-%m-%d %H:%M:%S.%f %Z'):
 
 
 def gpsnow():
-    """Return current GPS time
+    """Return current GPS time as a float.
 
     """
     return gpstime.utcnow().replace(tzinfo=tzutc()).gps()
 
 
-def parse(s):
-    """Return gpstime object for parsed time string
+parse = gpstime.parse
 
-    Equivalent to gpstime.parse().
+
+class GPSTimeParseAction(argparse.Action):
+    """gpstime argparse argumention parser Action.
+
+    Parses an arbitrary date/time string into a gpstime object.
 
     """
-    return gpstime.parse(s)
+    def __call__(self, parser, namespace, values, option_string=False):
+        # FIXME: support parsing argparse.REMAINDER values list into a
+        # single string
+        try:
+            gps = parse(values)
+        except TypeError:
+            gps = [parse(value) for value in values]
+        except GPSTimeException:
+            parser.error("Could not parse date/time string '{}'".format(values))
+        setattr(namespace, self.dest, gps)

@@ -1,7 +1,0 @@
-[Unit]
-Description=IETF leap second data update
-After=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/python3 -m ietf_leap_seconds -u /var/cache/ietf-leap-seconds/leap-seconds.list
