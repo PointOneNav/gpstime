@@ -8,26 +8,11 @@ Vcs-Git: https://git.ligo.org/cds/gpstime.git
 Build-Depends:
  debhelper (>= 9),
  dh-python,
- python-all,
- python-dateutil,
- python-requests,
- python-setuptools,
- python-setuptools-scm,
  python3-all,
  python3-dateutil,
  python3-requests,
  python3-setuptools,
  python3-setuptools-scm,
-
-Package: python-gpstime
-Architecture: all
-Depends:
- python-dateutil,
- ${misc:Depends},
- ${python:Depends},
-Description: GPS-aware Python datetime module
- Provides a gpstime class that extends the built-in datetime class to
- include GPS time conversion methods.
 
 Package: python3-gpstime
 Architecture: all
