@@ -66,18 +66,18 @@ test:3.7:
     # lint packages
     - lintian ../gpstime_*.changes
     # move things into dist/
-    - mv -v ../{python,python3}-gpstime_*.deb ../gpstime_*.{buildinfo,changes} dist/
+    - mv -v ../python3-gpstime_*.deb ../gpstime_*.{buildinfo,changes} dist/
   artifacts:
     paths:
       - dist/
 
-build:debian:stretch:
-  <<: *build-debian
-  image: debian:stretch
-
 build:debian:buster:
   <<: *build-debian
   image: debian:buster
+
+build:debian:buster:
+  <<: *build-debian
+  image: debian:bullseye
 
 # -- docs -------------------
 
