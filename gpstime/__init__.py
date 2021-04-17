@@ -28,6 +28,7 @@ from dateutil.tz import tzutc, tzlocal
 from .__version__ import __version__
 from .leaps import LEAPDATA
 
+
 ##################################################
 
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -36,6 +37,7 @@ ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 GPS0 = 315964800
 
 ##################################################
+
 
 def unix2gps(unix):
     """Convert UNIX timestamp to GPS time.
@@ -66,7 +68,9 @@ def gps2unix(gps):
         unix -= 1
     return unix
 
+
 ##################################################
+
 
 class GPSTimeException(Exception):
     pass
@@ -99,7 +103,9 @@ def dt2ts(dt):
     delta = dt - tzero
     return delta.total_seconds()
 
+
 ##################################################
+
 
 class gpstime(datetime):
     """GPS-aware datetime class
@@ -164,7 +170,7 @@ class gpstime(datetime):
         for information on possible date/time descriptions.
 
         """
-        if not string or string == 'now':
+        if string == 'now':
             return cls.now().replace(tzinfo=tzlocal())
         try:
             gps = float(string)
@@ -172,7 +178,7 @@ class gpstime(datetime):
             gps = None
         except TypeError:
             raise TypeError("Time specification must be a string, not {!s}".format(type(string)))
-        if gps:
+        if gps is not None:
             return cls.fromgps(gps)
         try:
             ts = cudate(string)
@@ -233,10 +239,10 @@ class GPSTimeParseAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=False):
         # FIXME: support parsing argparse.REMAINDER values list into a
         # single string
+        if isinstance(values, list):
+            values = ' '.join(values)
         try:
             gps = parse(values)
-        except TypeError:
-            gps = [parse(value) for value in values]
         except GPSTimeException:
             parser.error("Could not parse date/time string '{}'".format(values))
         setattr(namespace, self.dest, gps)

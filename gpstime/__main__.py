@@ -38,7 +38,8 @@ fg.add_argument(
     '-f', '--format',
     help="specify time format (see below), or printf numeric format for GPS times")
 PARSER.add_argument(
-    'time', metavar='TIME', action=GPSTimeParseAction, nargs='?', default='now',
+    'time', metavar='TIME', action=GPSTimeParseAction, nargs=argparse.REMAINDER,
+    default='now',
     help="time string in any format (including GPS), or current time if not specified")
 
 
