@@ -5,10 +5,15 @@ import time
 import calendar
 import warnings
 
+if os.name == 'nt':
+    LEAPFILE_NIST = None
+    LEAPFILE_IETF = None
+    LEAPFILE_IETF_USER = os.path.expandvars('%APPDATA%/gpstime/leap-seconds.list')
+else:
+    LEAPFILE_NIST = '/usr/share/zoneinfo/leapseconds'
+    LEAPFILE_IETF = '/usr/share/zoneinfo/leap-seconds.list'
+    LEAPFILE_IETF_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
 
-LEAPFILE_NIST = '/usr/share/zoneinfo/leapseconds'
-LEAPFILE_IETF = '/usr/share/zoneinfo/leap-seconds.list'
-LEAPFILE_IETF_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
 LEAPFILE_IETF_URL = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 
 
@@ -100,11 +105,11 @@ class LeapData:
         """
         self.data = None
         self.expires = 0
-        if os.path.exists(LEAPFILE_NIST):
+        if LEAPFILE_NIST is not None and os.path.exists(LEAPFILE_NIST):
             self._load(load_NIST, LEAPFILE_NIST)
-        if (not self.data or self.expired) and os.path.exists(LEAPFILE_IETF):
+        if (not self.data or self.expired) and LEAPFILE_IETF is not None and os.path.exists(LEAPFILE_IETF):
             self._load(load_IETF, LEAPFILE_IETF)
-        if (not self.data or self.expired) and os.path.exists(LEAPFILE_IETF_USER):
+        if (not self.data or self.expired) and LEAPFILE_IETF_USER is not None and os.path.exists(LEAPFILE_IETF_USER):
             self._load(load_IETF, LEAPFILE_IETF_USER)
         if self.expired:
             warnings.warn("Leap second data is expired.", RuntimeWarning)
