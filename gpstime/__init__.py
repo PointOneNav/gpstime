@@ -19,9 +19,10 @@ leap second occurs.
 
 """
 import bisect
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 import subprocess
+import sys
 
 from dateutil.tz import tzutc, tzlocal
 
@@ -148,15 +149,34 @@ class gpstime(datetime):
             tzinfo,
         )
 
+    # The rounding bug noted in fromgps() below was fixed in Python 3.4.4 and 3.5.1 (fixed in
+    # September 2015, released in December 2015; see https://bugs.python.org/issue23517). The
+    # workaround is no longer necessary.
+    __ROUNDING_HACK_NEEDED = (sys.version_info < (3, 4, 4) or
+                              (sys.version_info[:2] == (3, 5) and sys.version_info < (3, 5, 1)))
+
     @classmethod
     def fromgps(cls, gps):
         """Return gpstime object corresponding to GPS time."""
         gt = cls.utcfromtimestamp(gps2unix(gps))
-        # HACK: in python3, utcfromtimestamp() seems to floor instead
-        # of round the microseconds.  this causes round trips to fail.
-        # manually fix microseconds here to the rounded value instead.
-        ms = int(round(abs(gps - int(gps))*1000000))
-        return gt.replace(microsecond=ms, tzinfo=tzutc())
+        if cls.__ROUNDING_HACK_NEEDED:
+            # HACK: Prior to Python 3.4, utcfromtimestamp() seems to floor instead
+            # of round the microseconds.  this causes round trips to fail.
+            # manually fix microseconds here to the rounded value instead.
+            ms = int(round(abs(gps - int(gps))*1000000))
+            if ms >= 1000000:
+                sec = ms / 1000000
+                ms -= sec
+
+                if gps < 0:
+                    sec = -sec
+
+                result = gt.replace(microsecond=ms, tzinfo=tzutc()) + timedelta(seconds=sec)
+            else:
+                result = gt.replace(microsecond=ms, tzinfo=tzutc())
+            return result
+        else:
+            return gt.replace(tzinfo=tzutc())
 
     @classmethod
     def parse(cls, string='now'):

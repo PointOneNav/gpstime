@@ -125,6 +125,12 @@ class TestGPStime(unittest.TestCase):
         self.assertEqual(gpstime.gpstime.fromgps(1133585676).iso(),
                          '2015-12-08T04:54:19.000000Z')
 
+    def test_gpstime_fromgps_rounding(self):
+        self.assertEqual(gpstime.gpstime.fromgps(1133585676.274).iso(),
+                         '2015-12-08T04:54:19.274000Z')
+        self.assertEqual(gpstime.gpstime.fromgps(1133585676.874).iso(),
+                         '2015-12-08T04:54:19.874000Z')
+
     def test_gpstime_fromgps_timestamp(self):
         self.assertEqual(gpstime.gpstime.fromgps(1133585676).timestamp(),
                          1449550459)
