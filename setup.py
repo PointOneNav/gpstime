@@ -48,9 +48,12 @@ setup(
         'requests',
     ],
 
-    entry_points={
-        'console_scripts': [
-            'gpstime = gpstime.__main__:main',
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'gpstime = gpstime.__main__:main',
+    #     ],
+    # },
+    scripts=[
+        'bin/gpstime',
+    ],
 )

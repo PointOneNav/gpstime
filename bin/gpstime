@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+# DON'T DELETE ME! setuptool entry_points adds way too much overhead
+# and causing execution times to be much longer than they should be
+from gpstime.__main__ import main
+main()
