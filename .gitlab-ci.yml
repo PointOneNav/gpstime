@@ -18,7 +18,7 @@ cache:
   image: python
   before_script:
     # install testing dependencies
-    - python -m pip install pytest pytest-cov
+    - python -m pip install setuptools_scm pytest pytest-cov
   script:
     # install package (using -e to get script coverage)
     - python -m pip install -e ${CI_PROJECT_DIR}
