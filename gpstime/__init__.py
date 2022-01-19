@@ -154,7 +154,7 @@ class gpstime(datetime):
         # HACK: in python3, utcfromtimestamp() seems to floor instead
         # of round the microseconds.  this causes round trips to fail.
         # manually fix microseconds here to the rounded value instead.
-        ms = int(round((gps - int(gps))*1000000))
+        ms = int(round(abs(gps - int(gps))*1000000))
         return gt.replace(microsecond=ms, tzinfo=tzutc())
 
     @classmethod
