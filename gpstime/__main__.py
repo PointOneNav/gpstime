@@ -1,4 +1,3 @@
-from __future__ import print_function
 import argparse
 
 from dateutil.tz import tzutc, tzlocal
