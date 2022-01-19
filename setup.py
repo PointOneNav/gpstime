@@ -1,15 +1,19 @@
-import os
 from setuptools import setup
 
-with open(os.path.join('gpstime', '__version__.py')) as f:
-    exec(f.read())
 
 with open('README.md', 'rb') as f:
     longdesc = f.read().decode().strip()
 
+
 setup(
+    set_requires=[
+        'setuptools_scm',
+    ],
+    use_scm_version={
+        'write_to': 'gpstime/__version__.py',
+    },
+
     name='gpstime',
-    version=__version__,
     description='GPS-aware datetime module',
     long_description=longdesc,
     long_description_content_type='text/markdown',
@@ -30,16 +34,23 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
 
-    packages=['gpstime'],
-    scripts=['bin/gpstime'],
+    packages=[
+        'gpstime',
+    ],
 
     tests_require=[
         'python-dateutil',
     ],
+    test_suite='gpstime.test',
+
     install_requires=[
         'python-dateutil',
         'requests',
     ],
 
-    test_suite='gpstime.test',
+    entry_points={
+        'console_scripts': [
+            'gpstime = gpstime.__main__:main',
+        ],
+    },
 )
