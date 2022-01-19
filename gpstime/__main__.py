@@ -3,7 +3,7 @@ import argparse
 
 from dateutil.tz import tzutc, tzlocal
 
-from .__version__ import __version__
+from . import __version__
 from . import ISO_FORMAT, gpstime, GPSTimeParseAction
 from . import LEAPDATA
 
