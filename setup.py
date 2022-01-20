@@ -6,7 +6,7 @@ with open('README.md', 'rb') as f:
 
 
 setup(
-    set_requires=[
+    setup_requires=[
         'setuptools_scm',
     ],
     use_scm_version={
