@@ -75,7 +75,7 @@ build:debian:buster:
   <<: *build-debian
   image: debian:buster
 
-build:debian:buster:
+build:debian:bullseye:
   <<: *build-debian
   image: debian:bullseye
 
