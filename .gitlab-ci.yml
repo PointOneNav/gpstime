@@ -15,6 +15,8 @@ cache:
 # -- test -------------------
 
 .test: &test
+  except:
+    - /^debian.*$/
   image: python
   before_script:
     # install testing dependencies
@@ -83,6 +85,8 @@ build:debian:bullseye:
 
 docs:
   stage: docs
+  except:
+    - /^debian.*$/
   image: python
   before_script:
     # install docs requirements
