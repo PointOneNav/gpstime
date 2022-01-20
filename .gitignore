@@ -5,3 +5,5 @@ build
 dist
 *.src.rpm
 *.zip
+gpstime.egg-info/
+gpstime/__version__.py
