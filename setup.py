@@ -6,6 +6,10 @@ with open('README.md', 'rb') as f:
 
 
 setup(
+    setup_requires=[
+        'setuptools_scm',
+    ],
+
     name='gpstime',
     description='GPS-aware datetime module',
     long_description=longdesc,
