@@ -10,6 +10,10 @@ setup(
         'setuptools_scm',
     ],
 
+    use_scm_version={
+        'write_to': 'gpstime/__version__.py',
+    },
+
     name='gpstime',
     description='GPS-aware datetime module',
     long_description=longdesc,
