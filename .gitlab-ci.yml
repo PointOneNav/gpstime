@@ -119,6 +119,8 @@ docs:
 
 pages:
   stage: deploy
+  except:
+    - /^debian.*$/
   dependencies:
     - docs
   only:
