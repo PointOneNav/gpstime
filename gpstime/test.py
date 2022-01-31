@@ -1,5 +1,6 @@
 import unittest
 import os
+import sys
 import time
 import datetime
 from dateutil.tz import tzutc, tzlocal
@@ -123,6 +124,22 @@ class TestGPStime(unittest.TestCase):
     def test_gpstime_parse_gps_leap(self):
         self.assertEqual(gpstime.gpstime.parse(425520008).iso(),
                          '1993-06-30T23:59:60.000000Z')
+
+    @unittest.skipIf(sys.version_info < (3, 8), "returns datetime in python < 3.8")
+    def test_gpstime_add(self):
+        dt = gpstime.gpstime.parse(1133585676.2)
+        delta = datetime.timedelta(seconds=1)
+        self.assertTrue(isinstance(dt + delta, gpstime.gpstime))
+        dt += delta
+        self.assertTrue(isinstance(dt, gpstime.gpstime))
+
+    @unittest.skipIf(sys.version_info < (3, 8), "returns datetime in python < 3.8")
+    def test_gpstime_subtract(self):
+        dt = gpstime.gpstime.parse(1133585676.2)
+        delta = datetime.timedelta(seconds=1)
+        self.assertTrue(isinstance(dt - delta, gpstime.gpstime))
+        dt -= delta
+        self.assertTrue(isinstance(dt, gpstime.gpstime))
 
 ##################################################
 
