@@ -1,3 +1,4 @@
+from functools import lru_cache
 import os
 import sys
 import time
@@ -93,26 +94,37 @@ class LeapData:
     """Leap second data.
 
     """
+    _GPS0 = 315964800
+
     def __init__(self):
         """Load leap second data from file.
 
         """
-        self.data = None
+        self._data = None
         self.expires = 0
         if os.path.exists(LEAPFILE_NIST):
             self._load(load_NIST, LEAPFILE_NIST)
-        if (not self.data or self.expired) and os.path.exists(LEAPFILE_IETF):
+        if (not self._data or self.expired) and os.path.exists(LEAPFILE_IETF):
             self._load(load_IETF, LEAPFILE_IETF)
-        if (not self.data or self.expired) and os.path.exists(LEAPFILE_IETF_USER):
+        if (not self._data or self.expired) and os.path.exists(LEAPFILE_IETF_USER):
             self._load(load_IETF, LEAPFILE_IETF_USER)
         if self.expired:
             warnings.warn("Leap second data is expired.", RuntimeWarning)
 
     def _load(self, func, path):
         try:
-            self.data, self.expires = func(path)
+            self._data, self.expires = func(path)
         except:
             raise RuntimeError("Error loading leap file: {}".format(path))
+
+    @property
+    def data(self):
+        """Returns leap second data with times represented as UNIX.
+
+        """
+        if not self._data:
+            raise RuntimeError("Failed to load leap second data.")
+        return self._data
 
     @property
     def expired(self):
@@ -122,10 +134,29 @@ class LeapData:
         return self.expires <= time.time()
 
     def __iter__(self):
-        if not self.data:
-            raise RuntimeError("Failed to load leap second data.")
         for leap in self.data:
             yield leap
+
+    @lru_cache(maxsize=None)
+    def as_gps(self):
+        """Returns leap second data with times represented as GPS.
+
+        """
+        leaps = [(leap - self._GPS0) for leap in self.data if leap >= self._GPS0]
+        return [(leap + i) for i, leap in enumerate(leaps)]
+
+    @lru_cache(maxsize=None)
+    def as_unix(self, since_gps_epoch=False):
+        """Returns leap second data with times represented as UNIX.
+
+        If since_gps_epoch is set to True, only return leap second
+        data since the GPS epoch (1980-01-06T00:00:00Z).
+
+        """
+        if since_gps_epoch:
+            return [leap for leap in self.data if leap >= self._GPS0]
+        else:
+            return list(self.data)
 
     def update_local(self):
         """Update local leap second data file.
@@ -137,6 +168,9 @@ class LeapData:
             return
         print("updating user leap second data from IETF...", file=sys.stderr)
         self._load(fetch_ietf_leapfile, LEAPFILE_IETF_USER)
+        # invalidate the leapsecond caches
+        self.as_gps.cache_clear()
+        self.as_unix.cache_clear()
 
 
 LEAPDATA = LeapData()
