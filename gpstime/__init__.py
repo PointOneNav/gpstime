@@ -143,9 +143,6 @@ class gpstime(datetime):
     1158440653.553765
 
     """
-    def __new__(cls, *args):
-        return datetime.__new__(cls, *args)
-
     @classmethod
     def fromdatetime(cls, datetime):
         """Return gpstime object from datetime object"""
