@@ -18,6 +18,7 @@ usually represented as the 60th second of the minute during which the
 leap second occurs.
 
 """
+import bisect
 from datetime import datetime
 import warnings
 import argparse
@@ -57,13 +58,7 @@ def unix2gps(unix):
     """
     unix = float(unix)
     gps = unix - GPS0
-    for leap in LEAPDATA:
-        if leap < GPS0:
-            continue
-        if unix < leap:
-            break
-        gps += 1
-    return gps
+    return gps + bisect.bisect(LEAPDATA.as_unix(since_gps_epoch=True), unix)
 
 
 def gps2unix(gps):
@@ -72,13 +67,7 @@ def gps2unix(gps):
     """
     gps = float(gps)
     unix = gps + GPS0
-    for leap in LEAPDATA:
-        if leap < GPS0:
-            continue
-        if unix < leap:
-            break
-        unix -= 1
-    return unix
+    return unix - bisect.bisect(LEAPDATA.as_gps(), gps)
 
 
 ##################################################
