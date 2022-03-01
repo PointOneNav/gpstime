@@ -77,6 +77,7 @@ def fetch_ietf_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IETF_USER):
 
     """
     import requests
+
     dd = os.path.dirname(path)
     if dd != '' and not os.path.exists(dd):
         os.makedirs(dd)
@@ -87,7 +88,12 @@ def fetch_ietf_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IETF_USER):
         for c in r.iter_content():
             f.write(c)
     data, expires = load_IETF(tmp)
-    os.rename(tmp, path)
+
+    if len(data) == 0 or expires == 0:
+        raise ValueError('Failed to parse downloaded IETF leap seconds file.')
+    else:
+        os.rename(tmp, path)
+
     return data, expires
 
 
@@ -124,8 +130,8 @@ class LeapData:
     def _load(self, func, path):
         try:
             self._data, self.expires = func(path)
-        except:
-            raise RuntimeError(f"Error loading leap file: {path}")
+        except Exception as e:
+            raise RuntimeError(f"Error loading leap file {path}: {str(e)}")
 
     @property
     def data(self):
