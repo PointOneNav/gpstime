@@ -97,6 +97,8 @@ def fetch_ietf_leapfile(path):
     if len(data) == 0 or expires == 0:
         raise ValueError('Failed to parse downloaded IETF leap seconds file.')
     else:
+        if os.path.exists(path):
+            os.remove(path)
         os.rename(tmp, path)
 
     return data, expires
