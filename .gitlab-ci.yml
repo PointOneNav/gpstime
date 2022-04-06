@@ -51,7 +51,8 @@ test:3.10:
 test:3.10:mac:
   <<: *test
   image: python:3.10
-  tag: macos_bigsur_arm64
+  tags:
+    - macos_bigsur_arm64
 
 # -- build ------------------
 
