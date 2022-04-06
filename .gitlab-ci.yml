@@ -18,10 +18,9 @@ cache:
   except:
     - /^debian.*$/
   image: python
-  before_script:
+  script:
     # install testing dependencies
     - python -m pip install setuptools_scm pytest pytest-cov
-  script:
     # install package (using -e to get script coverage)
     - python -m pip install -e ${CI_PROJECT_DIR}
     # run tests
@@ -53,6 +52,9 @@ test:3.10:mac:
   image: python:3.10
   tags:
     - macos_bigsur_arm64
+  before_script:
+    - python3 -m venv test
+    - . test/bin/activate
 
 # -- build ------------------
 
