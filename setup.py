@@ -45,6 +45,7 @@ setup(
     test_suite='gpstime.test',
 
     install_requires=[
+        'appdirs',
         'python-dateutil',
         'requests',
     ],

@@ -5,10 +5,13 @@ import time
 import calendar
 import warnings
 
+import appdirs
+
 
 LEAPFILE_NIST = '/usr/share/zoneinfo/leapseconds'
 LEAPFILE_IETF = '/usr/share/zoneinfo/leap-seconds.list'
-LEAPFILE_IETF_USER = os.path.expanduser('~/.cache/gpstime/leap-seconds.list')
+LEAPFILE_IETF_USER = os.path.join(
+    appdirs.user_cache_dir('gpstime'), 'leap-seconds.list')
 LEAPFILE_IETF_URL = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 
 
