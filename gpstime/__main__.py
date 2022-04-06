@@ -4,7 +4,6 @@ from dateutil.tz import tzutc, tzlocal
 
 from . import __version__
 from . import ISO_FORMAT, gpstime, GPSTimeParseAction
-from . import LEAPDATA
 
 
 PARSER = argparse.ArgumentParser(
@@ -46,8 +45,6 @@ def tzname(tz):
 
 
 def main():
-    LEAPDATA.update_local()
-
     args = PARSER.parse_args()
 
     if args.tz == 'gps' and args.format == ISO_FORMAT:

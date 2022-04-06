@@ -72,17 +72,15 @@ def load_IETF(path):
     return data, expires
 
 
-def fetch_ietf_leapfile(path):
-    """Download IETF leap second data to path and return data.
-
-    Downloaded file not be written to path if it fails to parse.
+def fetch_ietf_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IETF_USER):
+    """Download IETF leap second data to path
 
     """
     import requests
     dd = os.path.dirname(path)
     if dd != '' and not os.path.exists(dd):
         os.makedirs(dd)
-    r = requests.get(LEAPFILE_IETF_URL)
+    r = requests.get(url)
     r.raise_for_status()
     tmp = path+'.tmp'
     with open(tmp, 'wb') as f:
@@ -100,33 +98,40 @@ class LeapData:
     _GPS0 = 315964800
 
     def __init__(self):
-        """Load leap second data from file.
+        """Initialize leap second data
 
         """
         self._data = None
         self.expires = 0
         if os.path.exists(LEAPFILE_NIST):
             self._load(load_NIST, LEAPFILE_NIST)
-        if (not self._data or self.expired) and os.path.exists(LEAPFILE_IETF):
+        if not self.valid and os.path.exists(LEAPFILE_IETF):
             self._load(load_IETF, LEAPFILE_IETF)
-        if (not self._data or self.expired) and os.path.exists(LEAPFILE_IETF_USER):
+        if not self.valid and os.path.exists(LEAPFILE_IETF_USER):
             self._load(load_IETF, LEAPFILE_IETF_USER)
-        if self.expired:
-            warnings.warn("Leap second data is expired.", RuntimeWarning)
+        if not self.valid:
+            if not self._data:
+                print("Leap second data not available.", file=sys.stderr)
+            elif self.expired:
+                print("Leap second data is expired.", file=sys.stderr)
+            print("Updating local user leap data cache from IETF...", file=sys.stderr)
+            self._load(fetch_ietf_leapfile, LEAPFILE_IETF_URL)
+            if not self._data:
+                raise RuntimeError("Failed to load leap second data.")
+            elif self.expired:
+                warnings.warn("Leap second data is expired.", RuntimeWarning)
 
     def _load(self, func, path):
         try:
             self._data, self.expires = func(path)
         except:
-            raise RuntimeError("Error loading leap file: {}".format(path))
+            raise RuntimeError(f"Error loading leap file: {path}")
 
     @property
     def data(self):
         """Returns leap second data with times represented as UNIX.
 
         """
-        if not self._data:
-            raise RuntimeError("Failed to load leap second data.")
         return self._data
 
     @property
@@ -135,6 +140,13 @@ class LeapData:
 
         """
         return self.expires <= time.time()
+
+    @property
+    def valid(self):
+        """True if leap second data is available and not expired
+
+        """
+        return self._data and not self.expired
 
     def __iter__(self):
         for leap in self.data:
@@ -161,26 +173,11 @@ class LeapData:
         else:
             return list(self.data)
 
-    def update_local(self):
-        """Update local leap second data file.
-
-        Only fetches if existing data doesn't exist or is expired.
-
-        """
-        if self.data and not self.expired:
-            return
-        print("updating user leap second data from IETF...", file=sys.stderr)
-        self._load(fetch_ietf_leapfile, LEAPFILE_IETF_USER)
-        # invalidate the leapsecond caches
-        self.as_gps.cache_clear()
-        self.as_unix.cache_clear()
-
 
 LEAPDATA = LeapData()
 
 
 if __name__ == '__main__':
-    LEAPDATA.update_local()
     print("expires: {}".format(LEAPDATA.expires))
     for ls in LEAPDATA:
         print(ls)
