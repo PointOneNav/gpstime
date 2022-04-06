@@ -6,9 +6,9 @@ gpstime subclass of the built-in datetime class with the addition of
 GPS time parsing and conversion methods.
 
 Leap second data, necessary for GPS time conversion, is expected to be
-provided by the core libc Time Zone Database tzdata.  If for some
-reason the tzdata leapsecond file is not available, a local cache of
-the IETF leap second record will be maintained:
+provided by the core libc Time Zone Database tzdata (on linux).  If
+for some reason the tzdata leapsecond file is not available, a local
+cache of the IETF leap second record will be maintained:
 
   https://www.ietf.org/timezones/data/leap-seconds.list
 
