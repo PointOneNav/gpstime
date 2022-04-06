@@ -132,6 +132,8 @@ class LeapData:
         """Returns leap second data with times represented as UNIX.
 
         """
+        if self.expired:
+            warnings.warn("Leap second data is expired.", RuntimeWarning)
         return self._data
 
     @property
