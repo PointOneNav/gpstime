@@ -1,9 +1,7 @@
 import unittest
-import os
 import sys
-import time
 import datetime
-from dateutil.tz import tzutc, tzlocal
+from dateutil.tz import tzutc
 
 import gpstime
 
