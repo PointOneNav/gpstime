@@ -59,8 +59,9 @@ class TestGPStime(unittest.TestCase):
 
     def test_gpstime_fromdatetime(self):
         dt = datetime.datetime(2015, 12, 8, 4, 54, 19, 0, tzutc())
-        self.assertEqual(gpstime.gpstime.fromdatetime(dt).gps(),
-                         1133585676.0)
+        gt = gpstime.gpstime.fromdatetime(dt)
+        self.assertIsInstance(gt, gpstime.gpstime)
+        self.assertEqual(gt.gps(), 1133585676.0)
 
     def test_gpstime_parse_now_roundtrip(self):
         gt0 = gpstime.gpstime.parse()

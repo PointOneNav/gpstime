@@ -142,12 +142,11 @@ class gpstime(datetime):
         tzinfo = datetime.tzinfo
         if tzinfo is None:
             tzinfo = tzlocal()
-        cls = gpstime(
+        return cls(
             datetime.year, datetime.month, datetime.day,
             datetime.hour, datetime.minute, datetime.second, datetime.microsecond,
             tzinfo,
         )
-        return cls
 
     @classmethod
     def fromgps(cls, gps):
