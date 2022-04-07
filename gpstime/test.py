@@ -1,11 +1,21 @@
 import unittest
 import sys
 import datetime
+
 from dateutil.tz import tzutc
 
 import gpstime
 
 ##################################################
+
+def cu_date_available():
+    """return True if coreutils date parser available"""
+    try:
+        gpstime._cu_date_parse()
+        return True
+    except:
+        return False
+
 
 class TestGPStime(unittest.TestCase):
 
@@ -85,9 +95,26 @@ class TestGPStime(unittest.TestCase):
         self.assertEqual(gpstime.gpstime.parse('2015-12-08_04:54:19.200000Z').iso(),
                          '2015-12-08T04:54:19.200000Z')
 
+    @unittest.skipIf(not cu_date_available(), "coreutils date not available")
     def test_gpstime_parse_timestamp(self):
         self.assertEqual(gpstime.gpstime.parse('@1474821047').gps(),
                          1158856264)
+
+    @unittest.skipIf(not cu_date_available(), "coreutils date not available")
+    def test_gpstime_parse_now0(self):
+        self.assertIsInstance(gpstime.gpstime.parse(), gpstime.gpstime)
+
+    @unittest.skipIf(not cu_date_available(), "coreutils date not available")
+    def test_gpstime_parse_now1(self):
+        self.assertIsInstance(gpstime.gpstime.parse('now'), gpstime.gpstime)
+
+    @unittest.skipIf(not cu_date_available(), "coreutils date not available")
+    def test_gpstime_parse_relative0(self):
+        self.assertIsInstance(gpstime.gpstime.parse('yesterday'), gpstime.gpstime)
+
+    @unittest.skipIf(not cu_date_available(), "coreutils date not available")
+    def test_gpstime_parse_relative1(self):
+        self.assertIsInstance(gpstime.gpstime.parse('1 month ago'), gpstime.gpstime)
 
     def test_gpstime_parse_tconvert(self):
         self.assertEqual(gpstime.gpstime.tconvert('2015-12-08T04:54:19.200000Z'),

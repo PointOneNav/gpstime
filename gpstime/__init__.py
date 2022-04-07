@@ -51,6 +51,10 @@ GPS0 = 315964800
 ##################################################
 
 
+class GPSTimeException(Exception):
+    pass
+
+
 def unix2gps(unix):
     """Convert UNIX timestamp to GPS time.
 
@@ -72,20 +76,37 @@ def gps2unix(gps):
 ##################################################
 
 
-class GPSTimeException(Exception):
-    pass
-
-
-def cudate(string='now'):
+def _cu_date_parse(string='now'):
     """Parse date/time string to UNIX timestamp with GNU coreutils date
 
     """
     cmd = ['date', '+%s.%N', '-d', string]
     try:
         ts = subprocess.check_output(cmd, stderr=subprocess.PIPE).strip()
-    except subprocess.CalledProcessError:
-        raise GPSTimeException("could not parse string '{}'".format(string))
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        raise GPSTimeException("could not parse string '{}'".format(string)) from e
     return float(ts)
+
+
+def _du_date_parse(string='now'):
+    """Parse date/time string to UNIX timestamp with dateutils parse
+
+    """
+    from dateutil.parser import parse
+    try:
+        ts = parse(string).timestamp()
+    except Exception as e:
+        raise GPSTimeException("could not parse string '{}'".format(string)) from e
+    return float(ts)
+
+
+# test which date string parser to use.  default to coreutils date if
+# available, since it has a better parser.
+try:
+    _cu_date_parse()
+    _date_parse = _cu_date_parse
+except GPSTimeException:
+    _date_parse = _du_date_parse
 
 
 ##################################################
@@ -162,11 +183,11 @@ class gpstime(datetime):
         if gps is not None:
             return cls.fromgps(gps)
         try:
-            ts = cudate(string)
+            ts = _date_parse(string)
         except GPSTimeException:
             # try again in case this was an ISO string using
             # underscore instead of T as the separator
-            ts = cudate(string.replace('_', 'T'))
+            ts = _date_parse(string.replace('_', 'T'))
         return cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
 
     tconvert = parse
