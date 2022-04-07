@@ -20,7 +20,6 @@ leap second occurs.
 """
 import bisect
 from datetime import datetime
-import warnings
 import argparse
 import subprocess
 
@@ -87,22 +86,6 @@ def cudate(string='now'):
     except subprocess.CalledProcessError:
         raise GPSTimeException("could not parse string '{}'".format(string))
     return float(ts)
-
-
-def dt2ts(dt):
-    """Return UNIX timestamp for datetime object.
-
-    """
-    try:
-        dt = dt.astimezone(tzutc())
-        tzero = datetime.fromtimestamp(0, tzutc())
-    except ValueError:
-        warnings.warn("GPS converstion requires timezone info.  Assuming local time...",
-                      RuntimeWarning)
-        dt = dt.replace(tzinfo=tzlocal())
-        tzero = datetime.fromtimestamp(0, tzlocal())
-    delta = dt - tzero
-    return delta.total_seconds()
 
 
 ##################################################
@@ -187,10 +170,6 @@ class gpstime(datetime):
         return cls.fromtimestamp(ts).replace(tzinfo=tzlocal())
 
     tconvert = parse
-
-    def timestamp(self):
-        """Return UNIX timestamp (seconds since epoch)."""
-        return dt2ts(self)
 
     def gps(self):
         """Return GPS time as a float."""
