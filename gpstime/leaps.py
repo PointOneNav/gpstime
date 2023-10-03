@@ -7,10 +7,10 @@ import warnings
 
 import appdirs
 
+LEAPFILE_IANA = '/usr/share/zoneinfo/leapseconds'
 
-LEAPFILE_NIST = '/usr/share/zoneinfo/leapseconds'
-LEAPFILE_IETF = '/usr/share/zoneinfo/leap-seconds.list'
-LEAPFILE_IETF_USER = os.path.join(
+LEAPFILE_IERS = '/usr/share/zoneinfo/leap-seconds.list'
+LEAPFILE_IERS_USER = os.path.join(
     appdirs.user_cache_dir('gpstime'), 'leap-seconds.list')
 LEAPFILE_IETF_URL = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 
@@ -24,7 +24,9 @@ def ntp2unix(ts):
     return int(ts) - 2208988800
 
 
-def load_NIST(path):
+def load_IANA(path):
+    """Parse the `leapseconds` file format used by IANA.
+    """
     data = []
     expires = 0
     with open(path, 'r') as f:
@@ -47,7 +49,9 @@ def load_NIST(path):
     return data, expires
 
 
-def load_IETF(path):
+def load_IERS(path):
+    """Parse the leap-seconds.list file format used by NIST, IERS, and IETF.
+    """
     data = []
     expires = 0
     first = True
@@ -72,7 +76,7 @@ def load_IETF(path):
     return data, expires
 
 
-def fetch_ietf_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IETF_USER):
+def fetch_iers_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IERS_USER):
     """Download IETF leap second data to path
 
     """
@@ -87,7 +91,7 @@ def fetch_ietf_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IETF_USER):
     with open(tmp, 'wb') as f:
         for c in r.iter_content():
             f.write(c)
-    data, expires = load_IETF(tmp)
+    data, expires = load_IERS(tmp)
 
     if len(data) == 0 or expires == 0:
         raise ValueError('Failed to parse downloaded IETF leap seconds file.')
@@ -109,21 +113,24 @@ class LeapData:
         """Initialize leap second data
 
         """
+        # Load available data from disk.
         self._data = None
         self.expires = 0
-        if os.path.exists(LEAPFILE_NIST):
-            self._load(load_NIST, LEAPFILE_NIST)
-        if not self.valid and os.path.exists(LEAPFILE_IETF):
-            self._load(load_IETF, LEAPFILE_IETF)
-        if not self.valid and os.path.exists(LEAPFILE_IETF_USER):
-            self._load(load_IETF, LEAPFILE_IETF_USER)
+        if os.path.exists(LEAPFILE_IANA):
+            self._load(load_IANA, LEAPFILE_IANA)
+        if not self.valid and os.path.exists(LEAPFILE_IERS):
+            self._load(load_IERS, LEAPFILE_IERS)
+        if not self.valid and os.path.exists(LEAPFILE_IERS_USER):
+            self._load(load_IERS, LEAPFILE_IERS_USER)
+
+        # Unable to load data, or data expired. Try to download an updated file.
         if not self.valid:
             if not self._data:
                 print("Leap second data not available.", file=sys.stderr)
             elif self.expired:
                 print("Leap second data is expired.", file=sys.stderr)
             print("Updating local user leap data cache from IETF...", file=sys.stderr)
-            self._load(fetch_ietf_leapfile, LEAPFILE_IETF_URL)
+            self._load(fetch_iers_leapfile, LEAPFILE_IETF_URL)
             if not self._data:
                 raise RuntimeError("Failed to load leap second data.")
             elif self.expired:
