@@ -8,6 +8,8 @@ import warnings
 import appdirs
 
 LEAPFILE_IANA = '/usr/share/zoneinfo/leapseconds'
+LEAPFILE_IANA_USER = os.path.join(
+    appdirs.user_cache_dir('gpstime'), 'leapseconds')
 
 LEAPFILE_IERS = '/usr/share/zoneinfo/leap-seconds.list'
 LEAPFILE_IERS_USER = os.path.join(
@@ -120,6 +122,8 @@ class LeapData:
             self._load(load_IANA, LEAPFILE_IANA)
         if not self.valid and os.path.exists(LEAPFILE_IERS):
             self._load(load_IERS, LEAPFILE_IERS)
+        if not self.valid and os.path.exists(LEAPFILE_IANA_USER):
+            self._load(load_IANA, LEAPFILE_IANA_USER)
         if not self.valid and os.path.exists(LEAPFILE_IERS_USER):
             self._load(load_IERS, LEAPFILE_IERS_USER)
 
