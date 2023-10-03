@@ -14,7 +14,6 @@ LEAPFILE_IANA_USER = os.path.join(
 LEAPFILE_IERS = '/usr/share/zoneinfo/leap-seconds.list'
 LEAPFILE_IERS_USER = os.path.join(
     appdirs.user_cache_dir('gpstime'), 'leap-seconds.list')
-LEAPFILE_IETF_URL = 'https://www.ietf.org/timezones/data/leap-seconds.list'
 
 
 def ntp2unix(ts):
@@ -78,31 +77,84 @@ def load_IERS(path):
     return data, expires
 
 
-def fetch_iers_leapfile(url=LEAPFILE_IETF_URL, path=LEAPFILE_IERS_USER):
-    """Download IETF leap second data to path
-
+def _download_http_file(url, path):
+    """Download a file over HTTP or HTTPS.
     """
     import requests
 
     dd = os.path.dirname(path)
     if dd != '' and not os.path.exists(dd):
         os.makedirs(dd)
+
     r = requests.get(url)
     r.raise_for_status()
-    tmp = path+'.tmp'
-    with open(tmp, 'wb') as f:
+    with open(path, 'wb') as f:
         for c in r.iter_content():
             f.write(c)
-    data, expires = load_IERS(tmp)
 
-    if len(data) == 0 or expires == 0:
-        raise ValueError('Failed to parse downloaded IETF leap seconds file.')
-    else:
-        if os.path.exists(path):
-            os.remove(path)
-        os.rename(tmp, path)
 
-    return data, expires
+def _download_ftp_file(url, path):
+    import ftplib
+    from urllib.parse import urlparse
+
+    parts = urlparse(url)
+    ftp = ftplib.FTP(host=parts.hostname)
+    ftp.login()
+
+    dd = os.path.dirname(path)
+    if dd != '' and not os.path.exists(dd):
+        os.makedirs(dd)
+
+    with open(path, 'wb') as f:
+        ftp.retrbinary("RETR %s" % parts.path, f.write)
+
+
+def fetch_leapfile():
+    # Candidate sources.
+    #
+    # Reference: https://kb.meinbergglobal.com/kb/time_sync/ntp/configuration/ntp_leap_second_file
+    sources = [
+        dict(download=_download_http_file, url='https://hpiers.obspm.fr/iers/bul/bulc/ntp/leap-seconds.list',
+             load=load_IERS, path=LEAPFILE_IERS_USER),
+        dict(download=_download_ftp_file, url='ftp://boulder.ftp.nist.gov/pub/time/leap-seconds.list',
+             load=load_IERS, path=LEAPFILE_IERS_USER),
+        dict(download=_download_ftp_file, url='ftp://ftp.nist.gov/pub/time/leap-seconds.list',
+             load=load_IERS, path=LEAPFILE_IERS_USER),
+        dict(download=_download_http_file, url='https://www.ietf.org/timezones/data/leap-seconds.list',
+             load=load_IERS, path=LEAPFILE_IERS_USER),
+        dict(download=_download_http_file, url='https://data.iana.org/time-zones/tzdb/leapseconds',
+             load=load_IANA, path=LEAPFILE_IANA_USER),
+    ]
+
+    print("Updating local user leap data cache from known sources...", file=sys.stderr)
+    for source in sources:
+        # Download the file.
+        try:
+            temp_path = source['path'] + '.tmp'
+            source['download'](url=source['url'], path=temp_path)
+        except Exception as e:
+            print('Unable to download leap seconds file from %s: %s' % (source['url'], str(e)), file=sys.stderr)
+            continue
+
+        # Load the file.
+        try:
+            data, expires = source['load'](temp_path)
+            if len(data) == 0 or expires == 0:
+                raise ValueError('Leap second data not found in file.')
+        except Exception as e:
+            print('Unable to load leap seconds file from %s: %s' % (source['url'], str(e)), file=sys.stderr)
+            os.remove(temp_path)
+            continue
+
+        # Loaded successfully. Save the file.
+        print('Successfully downloaded leap seconds file from %s.' % source['url'], file=sys.stderr)
+        if os.path.exists(source['path']):
+            os.remove(source['path'])
+        os.rename(temp_path, source['path'])
+
+        return data, expires
+
+    raise RuntimeError('Unable to download leap second data file from available sources.')
 
 
 class LeapData:
@@ -133,16 +185,21 @@ class LeapData:
                 print("Leap second data not available.", file=sys.stderr)
             elif self.expired:
                 print("Leap second data is expired.", file=sys.stderr)
-            print("Updating local user leap data cache from IETF...", file=sys.stderr)
-            self._load(fetch_iers_leapfile, LEAPFILE_IETF_URL)
-            if not self._data:
-                raise RuntimeError("Failed to load leap second data.")
-            elif self.expired:
+
+            # This will raise an exception if it cannot download or parse a file. Otherwise, it should always return
+            # valid data.
+            self._data, self.expires = fetch_leapfile()
+            if self.expired:
                 warnings.warn("Leap second data is expired.", RuntimeWarning)
 
     def _load(self, func, path):
         try:
-            self._data, self.expires = func(path)
+            data, expires = func(path)
+            if len(data) == 0 or expires == 0:
+                raise ValueError('Leap second data not found in file.')
+            else:
+                self._data = data
+                self.expires = expires
         except Exception as e:
             raise RuntimeError(f"Error loading leap file {path}: {str(e)}")
 
