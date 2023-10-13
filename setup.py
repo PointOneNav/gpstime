@@ -14,7 +14,7 @@ setup(
         'write_to': 'gpstime/__version__.py',
     },
 
-    name='gpstime',
+    name='p1-gpstime',
     description='GPS-aware datetime module',
     long_description=longdesc,
     long_description_content_type='text/markdown',
